@@ -1,0 +1,8 @@
+
+<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN' >
+<html lang=en>
+<head>
+<title>Sun Time Table </title>
+</head>
+<body>
+<table class='tDP2' ><tr class='tdM'><td>Date: </td><td colspan='2' >21/06/2017</td></tr><tr class='tdM'><td>coordinates: </td><td colspan='2' >-32.7849026, 26.8454793</td></tr><tr class='tdM'><td>location: </td><td colspan='2'>Zoology Department, Alice, 5700, South Africa</td></tr><tr class='tdM'><td class='td70' >hour</td><td class='td70' >Elevation</td><td class='td70' >Azimuth</td></tr><tr class='textRx'><td>07:14:47</td><td>-0.833</td><td>62.37</td></tr><tr class='textRx'><td>8:00:00</td><td>7.32</td><td>55.96</td></tr><tr class='textRx'><td>9:00:00</td><td>17.13</td><td>46.08</td></tr><tr class='textRx'><td>10:00:00</td><td>25.28</td><td>34.17</td></tr><tr class='textRx'><td>11:00:00</td><td>31.04</td><td>19.99</td></tr><tr class='textRx'><td>12:00:00</td><td>33.67</td><td>3.99</td></tr><tr class='textRx'><td>13:00:00</td><td>32.74</td><td>347.57</td></tr><tr class='textRx'><td>14:00:00</td><td>28.4</td><td>332.39</td></tr><tr class='textRx'><td>15:00:00</td><td>21.31</td><td>319.38</td></tr><tr class='textRx'><td>16:00:00</td><td>12.23</td><td>308.58</td></tr><tr class='textRx'><td>17:00:00</td><td>1.78</td><td>299.56</td></tr><tr class='textRx'><td>17:14:09</td><td>-0.833</td><td>297.63</td></tr></table></body></html>
