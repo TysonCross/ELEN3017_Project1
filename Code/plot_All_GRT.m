@@ -140,64 +140,70 @@ opts1.Robust = 'Bisquare';
 opts1.StartPoint = [0 0 0 0.0157868977567326];
 
 % Fit model to data.
-[fitresult1, gof1] = fit( xData1, yData1, ft1, opts1 );
+[fitresult1,~] = fit( xData1, yData1, ft1, opts1 );
 
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns R;
 
 %% Display setting and output setup
 scr = get(groot,'ScreenSize');                              % screen resolution
+phi = (1 + sqrt(5))/2;
+ratio = phi/3;
+offset = [ scr(3)/4 scr(4)/4]; 
 fig1 =  figure('Position',...                               % draw figure
-    [1 scr(4)*3/5 scr(3)*3/5 scr(4)*3/5]);
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio]);
 set(fig1,'numbertitle','off',...                            % Give figure useful title
-    'name','GHI Alice, Fort Hare',...
-    'Color','white');
-% set(fig1, 'MenuBar', 'none');                             % Make figure clean
-% set(fig1, 'ToolBar', 'none');                             
-% c = listfonts
-fontName='CMU Serif';
+        'name','Title of Graph',...
+        'Color','white');
+fontName='Helvetica';
 set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
-set(groot,'FixedWidthFontName', 'ElroNet Monospace')      
+set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
 
-%% Plot
-% Top
+% Draw plots
 p1_1 = plot(Date1,GHI_CMP1,...                           
-        'Color',[0.18 0.18 0.9 .6],...                 
-        'LineStyle','-',...
-        'LineWidth',1);
+    'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
+	'LineStyle','-',...
+	'LineWidth',1);
 hold on
-% p1_2 = plot(Date,sine,...                           
-%         'Color',[0.9 0.18 0.18 .6],...                 
-%         'LineStyle','-',...
-%         'LineWidth',1);
-% hold on
-% Plot fit with data.
-h1_1 = plot( fitresult1, xData1, yData1);
+p1_2 = plot(fitresult1);
+set(p1_2,...
+    'Color',[0.9 0.18 0.18 .6],...                 
+	'LineStyle','-',...
+	'LineWidth',1);
 hold on
-% Top title
+
+
+% Axes and labels
 ax1 = gca;
-% axis(ax1,[datenum(Date(1)) datenum(Date(1))+width(width/100) 0.0 height]);
+box(ax1,'off');
+set(ax1,'FontSize',14,...
+    'YMinorTick','off',...
+    'XMinorTick','off',...
+    'XTickLabelRotation',45,...
+    'FontName',fontName);
 title('GHI Graaf-Reinet',...
     'FontSize',14,...
     'FontName',fontName);
-% Axes and labels
-ylabel('Global Insolation ',...
-    'FontName',fontName,...
-    'FontSize',14);%,...
-%     'Position', [-10*(width/height) 0.5*height]);
-xlabel('Date ',...
-    'FontName',fontName,...
-    'FontSize',14);%,...
-set(ax1,'FontSize',14,...
-    'XTickLabelRotation',45)
+ylabel('Global Insolation \rightarrow')%,...
+xlabel('Date \rightarrow');
 datetick('x','dd mmm yyyy','keepticks','keeplimits')
 
-% Top legend
-% legend1 = legend({'Measured GHI','Fourier Fit'});
- set(legend1,...
-     'Position',[0.7    0.88    0.1125    0.0403],...
-     'Box','off');
+% Legend
+legend1 = legend({'Measured GHI','Fitted Curve'});
+set(legend1,...
+	'Location','best',...
+	'Position',[0.641 0.798 0.113 0.049],...
+	'Box','on');
 hold off
+
+% Adjust figure
+pos = get(ax1, 'Position');                                 % Current position
+pos(1) = 0.08;                                              % Shift Plot horizontally
+pos(2) = pos(2) + 0.03;                                     % Shift Plot vertically
+pos(3) = pos(3)*1.1;                                        % Scale plot vertically
+set(ax1, 'Position', pos)
+hold off
+
 % export (fix for missing CMU fonts in eps export)
 % export_fig Report/letter_frequency.eps
