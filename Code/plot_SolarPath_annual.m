@@ -26,35 +26,43 @@ for j=1:2:m-1
     i = i+1;
 end
 
-%% Create output variable
+%% Annual data 
 raw_date = reshape([raw_date{:}],size(raw_date));
 
 for k=1:length(raw_elevation)
-    SunElevationYear(k,:) = max(raw_elevation(k,:));
-    SunAzimuthYear_temp = deg2rad(max(raw_azimuth(k,:)));
+    SunElevationYearMax(k,:) = max(raw_elevation(k,:));
+    SunAzimuthYear_min = deg2rad(min(raw_azimuth(k,:)));
     DateYear(k) = raw_date(k);
-    SunAzimuthYear(k,:) = rad2deg(unwrap(SunAzimuthYear_temp*10));
+    SunAzimuthYearMin(k,:) = rad2deg(unwrap(SunAzimuthYear_min));
 end
 
-% Equinoxes and Solstices
+%% Equinoxes and Solstices
 % March 21 - Autumn - Day 80 / % September 21 Spring - Day 264
 % June 21 - Winter - Day 172
 % December 21 - Summer - Day 355
 days =[80,172,355];
-
 i=1;
 for k=1:length(days)
     SunElevationDay(i,:) = raw_elevation(days(k),:);
     SunAzimuthDay_temp = deg2rad(raw_azimuth(days(k),:));
     DateDay(i) = raw_date(k);
     SunAzimuthDay(i,:) = rad2deg(unwrap((SunAzimuthDay_temp)));
+	for j=6:12 
+        SunElevationYear(i,j-5) = raw_elevation(k,(j*6)+1); 
+        SunAzimuthYear_temp = deg2rad(raw_azimuth(k,(j*6)+1)); 
+        SunAzimuthYear(i,j-5) = rad2deg(unwrap(SunAzimuthYear_temp)); 
+    end 
     i = i + 1;
 end
+
+% syms delta_time n;
+% delta_time(n) = 9.873*sin( (4*pi / 365.242) * ( n - 81 )) - 7.655*sin( (2*pi / 365.242)* ( n - 1 ));
+% days = [1:365];
+% equation_time = delta_time(days);
 
 %% Clear temporary variables
 clearvars raw_sundata raw_azimuth raw_elevation raw_time raw_date R i j k str;
 clearvars SunElevationDay_temp SunAzimuthDay_temp;
-
 
 %% Display setting and output setup
 scr = get(groot,'ScreenSize');                              % screen resolution
@@ -96,6 +104,8 @@ ylabel(ax1,...
     'Solar Elevation Angle (deg)');
 xlabel(ax1,...
     'Solar Azimuth Angle (deg)');
+
+% Ticks formatting 
 xt=get(ax1,'xtick');
 for k=1:numel(xt);
 xt1{k}=sprintf('%d°',xt(k));
@@ -127,6 +137,13 @@ a1_3 = annotation('textbox',[0.483 0.475 0.0531 0.0348],...
         'BackgroundColor','white',...
         'FontSize',12,...
         'FontName',fontName);
+    
+% Adjust figure 1
+pos_1 = get(ax1, 'Position');                                 % Current position
+pos_1(1) = 0.08;                                              % Shift Plot horizontally
+pos_1(2) = pos_1(2) + 0.03;                                   % Shift Plot vertically
+pos_1(3) = pos_1(3)*1.1;                                      % Scale plot vertically
+set(ax1, 'Position', pos_1);
 hold off
 
 %% Fig2
@@ -137,9 +154,6 @@ set(fig2,'numbertitle','off',...                            % Give figure useful
         'name','Solar Azimith Angle',...
         'Color','white');
 % Plot
-t1 = datetime(0,0,0);
-t2 = datetime(11,50,0);
-timelabel = linspace(t1,t2,144);
 time = datetime(Time,'InputFormat','HH:mm:ss','Format','HH:mm');
 
 for i=1:n
@@ -148,24 +162,28 @@ for i=1:n
 	'LineWidth',1);
 hold on
 end
+
 % Axis
 ax2 = gca;
 set(ax2,...
     'FontSize',14,...
-	'FontName',fontName,...
+    'FontName',fontName,...
     'Box','off',...
     'XMinorTick','on',...
-	'YMinorTick','on',...
+    'YMinorTick','on',...
     'XTick',...
-    [737148:0.125:737149],...
+    [737149.250:0.125:737149.875],...
+    'Xlim',[737149.250 737149.875],...
     'XTickLabel',...
-    {'00:00','03:00','06:00','09:00','12:00','15:00','18:00','21:00','00:00'},...
+    {'06:00','09:00','12:00','15:00','18:00','21:00'},...
     'YTick',[-180:30:180],...
     'Ylim',[-180 180]);
 ylabel(ax2,...
     'Solar Azimuth Angle');
 xlabel(ax2,...
     'Time \rightarrow');
+
+% Ticks formatting 
 yt=get(ax2,'ytick');
 for k=1:numel(yt);
 yt2{k}=sprintf('%d°',yt(k));
@@ -177,45 +195,58 @@ legend2 = legend(ax2,...
     'EdgeColor',[1 1 1],...
 	'Box','off');
 reorderLegend([1,3,2],ax2);
+
+% Adjust Figure 2
+pos_2 = get(ax2, 'Position');                                 % Current position
+pos_2(1) = 0.08;                                              % Shift Plot horizontally
+pos_2(2) = pos_2(2) + 0.03;                                   % Shift Plot vertically
+pos_2(3) = pos_2(3)*1.2;                                      % Scale plot vertically
+set(ax1, 'Position', pos_2);
 hold off
 
-% Fig3
+%% Fig3
 fig3 =  figure('Position',...                               % draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
         'Visible', 'off');
 set(fig3,'numbertitle','off',...                            % Give figure useful title
-        'name','Title of Graph',...
+        'name','Annual Solar Azimuth (Minimum)',...
         'Color','white');
-ax3 = gca;
-p3_1 = plot(SunAzimuthYear,...
+    
+date = datetime(DateYear,'ConvertFrom','excel','Format','MMMM');
+
+p3_1 = plot(date,SunAzimuthYearMin,...
 	'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
 	'LineStyle','-',...
 	'LineWidth',1);
+
+% Axis
+ax3 = gca;
 set(ax3,...
     'FontSize',14,...
-    'YMinorTick','off',...
-    'XMinorTick','off',...
-    'XTickLabelRotation',45,...
     'FontName',fontName,...
-    'Box','off');
-title('GHI Graaf-Reinet',...
-    'FontSize',14,...
-    'FontName',fontName);
+    'Box','off',...
+    'XMinorTick','off',...
+    'YMinorTick','on',...
+    'XGrid','on',...
+    'XTick',[736696 736755 736816 736877 736939 737000 737060],...
+    'Xlim',[736696 737060],...
+    'XTickLabel',{'Jan','Mar','May','Jul','Sep','Nov','Dec'},...
+    'YTick',[0:5:30],...
+    'Ylim',[0 30]);
 ylabel(ax3,...
-    'Global Insolation \rightarrow');
+    'Annual Solar Azimuth');
 xlabel(ax3,...
     'Date \rightarrow');
-datetick(ax3,...
-    'x','dd mmm yyyy',...
-    'keepticks','keeplimits');
-legend3 = legend(ax3,...
-    {'Measured GHI','Fitted Curve'});
-set(legend3,...
-	'Location','best',...
-	'Box','on');
+
+% Adjust Figure 3
+pos_3 = get(ax3, 'Position');                                 % Current position
+pos_3(1) = 0.08;                                              % Shift Plot horizontally
+pos_3(2) = pos_3(2) + 0.03;                                   % Shift Plot vertically
+pos_3(3) = pos_3(3)*1.1;                                      % Scale plot vertically
+set(ax1, 'Position', pos_3);
 hold off
 
-% Fig4
+%% Fig4
 fig4 =  figure('Position',...                               % draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
         'Visible', 'off');
@@ -223,7 +254,7 @@ set(fig4,'numbertitle','off',...                            % Give figure useful
         'name','Title of Graph',...
         'Color','white');
 ax4 = gca;
-p4_1 = plot(SunElevationYear,...
+p4_1 = plot(date,90-SunElevationYearMax,...
     'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
 	'LineStyle','-',...
 	'LineWidth',1);
@@ -256,28 +287,6 @@ hold off
 hold off
 
 
-% Adjust figure
-pos_1 = get(ax1, 'Position');                                 % Current position
-pos_1(1) = 0.08;                                              % Shift Plot horizontally
-pos_1(2) = pos_1(2) + 0.03;                                   % Shift Plot vertically
-pos_1(3) = pos_1(3)*1.1;                                      % Scale plot vertically
-set(ax1, 'Position', pos_1);
-hold off
-
-pos_2 = get(ax2, 'Position');                                 % Current position
-pos_2(1) = 0.08;                                              % Shift Plot horizontally
-pos_2(2) = pos_2(2) + 0.03;                                   % Shift Plot vertically
-pos_2(3) = pos_2(3)*1.2;                                      % Scale plot vertically
-set(ax1, 'Position', pos_2);
-hold off
-
-pos_3 = get(ax3, 'Position');                                 % Current position
-pos_3(1) = 0.08;                                              % Shift Plot horizontally
-pos_3(2) = pos_3(2) + 0.03;                                   % Shift Plot vertically
-pos_3(3) = pos_3(3)*1.1;                                      % Scale plot vertically
-set(ax1, 'Position', pos_3);
-hold off
-
 pos_4 = get(ax4, 'Position');                                 % Current position
 pos_4(1) = 0.08;                                              % Shift Plot horizontally
 pos_4(2) = pos_4(2) + 0.03;                                   % Shift Plot vertically
@@ -285,10 +294,10 @@ pos_4(3) = pos_4(3)*1.1;                                      % Scale plot verti
 set(ax1, 'Position', pos_4)
 hold off
 
-% set(fig1, 'Visible', 'on');
-% set(fig2, 'Visible', 'on');
+set(fig1, 'Visible', 'on');
+set(fig2, 'Visible', 'on');
 set(fig3, 'Visible', 'on');
-% set(fig4, 'Visible', 'on');
+set(fig4, 'Visible', 'on');
 
 % export (fix for missing CMU fonts in eps export)
 % export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
