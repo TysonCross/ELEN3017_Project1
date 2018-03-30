@@ -1,72 +1,91 @@
-
 clc; clear all;
+
+Latitude = -32.7849026;
+Longitude = 26.8454793;
+
 %% Import the data
-[~, ~, raw_sundata] = xlsread('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/SunEarthTools_AnnualSunPath_2017_1522312124298 10min.xlsx','SunEarthTools_AnnualSunPath_201');
-raw_sundata = raw_sundata(2:end,2:end);
-
-[~, ~, raw_time] = xlsread('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/SunEarthTools_AnnualSunPath_2017_1522312124298 10min.xlsx','SunEarthTools_AnnualSunPath_201');
-raw_time = raw_time(1,2:end);
-
-[~, ~, raw_date] = xlsread('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/SunEarthTools_AnnualSunPath_2017_1522312124298 10min.xlsx','SunEarthTools_AnnualSunPath_201');
-raw_date = raw_date(2:end,1);
-
+[~, ~, raw] = xlsread('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/SunEarthTools_AnnualSunPath_2017.xlsx','AnnualSunPath_2017');
+raw_sundata = raw(2:end,2:end);
+raw_time = raw(1,2:end);
+raw_date = raw(2:end,1);
 
 %% Prepare and split data
 % raw_time(cellfun(@(x) ~isempty(x) && isnumeric(x) && isnan(x),raw_time)) = {''};
 R = cellfun(@(x) (~isnumeric(x) && ~islogical(x)) || isnan(x),raw_sundata); % Find non-numeric cells
 raw_sundata(R) = {NaN}; % Replace non-numeric cells
 
+% Time
 [n m] = size(raw_sundata);
 i=1;
 for j=1:2:m-1
     str = raw_time{1,j};
-    Time{1,i} = str(3:end);
+    Time{1,i} = str(3:end-3);
     raw_elevation(:,i) = [raw_sundata{:,j}]';
     raw_azimuth(:,i)   = [raw_sundata{:,j+1}]';
     i = i+1;
 end
 
-%% Annual data 
+%% Annual data %%
 raw_date = reshape([raw_date{:}],size(raw_date));
 
-for k=1:length(raw_elevation)
-    SunElevationYearMax(k,:) = max(raw_elevation(k,:));
-    SunAzimuthYear_min = deg2rad(min(raw_azimuth(k,:)));
-    DateYear(k) = raw_date(k);
-    SunAzimuthYearMin(k,:) = rad2deg(unwrap(SunAzimuthYear_min));
+%% Azimuth and Elevation
+i=1;
+for j=1:length(raw_elevation)
+    SunElevationYearMax(j,:) = max(raw_elevation(j,:));
+    SunAzimuthYear_min = deg2rad(min(raw_azimuth(j,:)));
+    DateYear(j) = raw_date(j);
+    SunAzimuthYearMin(j,:) = rad2deg(unwrap(SunAzimuthYear_min));
+    i = i + 1;
 end
+
+%% Zenith
+i=1;
+for j=sort([5 6 7 8 9 10 11 12])  % from 6am to 12pm
+    TimeZenith{1,i} = Time{1,(j*6)+1}
+    SunZenithYear(:,i) = raw_elevation(:,(j*6));    % Time columns in increments of 10 min
+	i = i + 1;
+end
+R1 = arrayfun(@(x) (~isnumeric(x) && ~islogical(x)) || isnan(x),SunZenithYear); % Find non-numeric cells
+SunZenithYear(R1) = (0); % Replace non-numeric cells
+SunZenithYear = 90 - SunZenithYear;
 
 %% Equinoxes and Solstices
 % March 21 - Autumn - Day 80 / % September 21 Spring - Day 264
 % June 21 - Winter - Day 172
 % December 21 - Summer - Day 355
-days =[80,172,355];
+days =[80,172,355]; % Solstices and Equinox
 i=1;
 for k=1:length(days)
     SunElevationDay(i,:) = raw_elevation(days(k),:);
     SunAzimuthDay_temp = deg2rad(raw_azimuth(days(k),:));
     DateDay(i) = raw_date(k);
     SunAzimuthDay(i,:) = rad2deg(unwrap((SunAzimuthDay_temp)));
-	for j=6:12 
-        SunElevationYear(i,j-5) = raw_elevation(k,(j*6)+1); 
-        SunAzimuthYear_temp = deg2rad(raw_azimuth(k,(j*6)+1)); 
-        SunAzimuthYear(i,j-5) = rad2deg(unwrap(SunAzimuthYear_temp)); 
-    end 
     i = i + 1;
 end
 
-% Equation of Solar Time
+% Dates
+dateMonth = datetime(DateYear,'ConvertFrom','excel','Format','MMMM');
+dateMonthDay = datetime(DateYear,'ConvertFrom','excel','Format','MMMM dd');
+time = datetime(Time,'InputFormat','HH:mm','Format','HH:mm');
+
+%% Equation of Solar Time
 % syms delta_time n;
 % delta_time(n) = 9.873*sin( (4*pi / 365.242) * ( n - 81 )) - 7.655*sin( (2*pi / 365.242)* ( n - 1 ));
-% days = [1:365];
+days = [1:366];
 % equation_time = delta_time(days);
 
-% Declination Angle
-DeclinationAngle = 23.45 * sin((360/365)*(DateDay + 284));
+%% Declination Angle
+d = 360./365.*(datenum(days) + 284);
+DeclinationAngle = 23.45 * sin(rad2deg(d));
+theoretical_tilt = Latitude-DeclinationAngle;
+
+disp('Finished Output Variable preperation');
 
 %% Clear temporary variables
-clearvars raw_sundata raw_azimuth raw_elevation raw_time raw_date R i j k str;
-clearvars SunElevationDay_temp SunAzimuthDay_temp;
+% clearvars raw_sundata raw_azimuth raw_elevation raw_time raw_date R i j k str;
+% clearvars SunElevationDay_temp SunAzimuthDay_temp;
+
+disp('Cleared temp variables');
 
 %% Display setting and output setup
 scr = get(groot,'ScreenSize');                              % screen resolution
@@ -90,7 +109,7 @@ set(fig1,'numbertitle','off',...                            % Give figure useful
 for i=1:n
     plot_num = strcat('p1_',num2str(i));
     variable.(plot_num) = plot(SunAzimuthDay(i,:),SunElevationDay(i,:),...
-	'LineWidth',1);
+	'LineWidth',2);
 hold on
 end
 % Axis
@@ -101,7 +120,7 @@ set(ax1,...
     'XMinorTick','on',...
     'FontName',fontName,...
     'Box','off',...
-    'XTick',[-180:40:180],...
+    'XTick',[-180:30:180],...
     'Xlim',[-180 180],...
     'Ylim',[0 90]);
 ylabel(ax1,...
@@ -150,6 +169,8 @@ pos_1(3) = pos_1(3)*1.1;                                      % Scale plot verti
 set(ax1, 'Position', pos_1);
 hold off
 
+disp('Finished Fig1')
+
 %% Fig2
 fig2 =  figure('Position',...                               % draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
@@ -158,12 +179,11 @@ set(fig2,'numbertitle','off',...                            % Give figure useful
         'name','Solar Azimith Angle',...
         'Color','white');
 % Plot
-time = datetime(Time,'InputFormat','HH:mm:ss','Format','HH:mm');
 
 for i=1:n
     plot_num = strcat('p2_',num2str(i));
     variable.(plot_num) = plot(time,SunAzimuthDay(i,:),...
-	'LineWidth',1);
+	'LineWidth',2);
 hold on
 end
 
@@ -176,10 +196,10 @@ set(ax2,...
     'XMinorTick','on',...
     'YMinorTick','on',...
     'XTick',...
-    [737149.250:0.125:737149.875],...
-    'Xlim',[737149.250 737149.875],...
+    [737149.125:0.125:737149.875],...
+    'Xlim',[737149.125 737149.875],...
     'XTickLabel',...
-    {'06:00','09:00','12:00','15:00','18:00','21:00'},...
+    {'03:00','06:00','09:00','12:00','15:00','18:00','21:00'},...
     'YTick',[-180:30:180],...
     'Ylim',[-180 180]);
 ylabel(ax2,...
@@ -208,6 +228,8 @@ pos_2(3) = pos_2(3)*1.2;                                      % Scale plot verti
 set(ax1, 'Position', pos_2);
 hold off
 
+disp('Finished Fig2')
+
 %% Fig3
 fig3 =  figure('Position',...                               % draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
@@ -215,13 +237,11 @@ fig3 =  figure('Position',...                               % draw figure
 set(fig3,'numbertitle','off',...                            % Give figure useful title
         'name','Annual Solar Azimuth (Minimum)',...
         'Color','white');
-    
-date = datetime(DateYear,'ConvertFrom','excel','Format','MMMM');
 
-p3_1 = plot(date,SunAzimuthYearMin,...
+p3_1 = plot(dateMonth,SunAzimuthYearMin,...
 	'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
 	'LineStyle','-',...
-	'LineWidth',1);
+	'LineWidth',2);
 
 % Axis
 ax3 = gca;
@@ -231,14 +251,14 @@ set(ax3,...
     'Box','off',...
     'XMinorTick','off',...
     'YMinorTick','on',...
-    'XGrid','on',...
+    'XGrid','off',...
     'XTick',[736696 736755 736816 736877 736939 737000 737060],...
     'Xlim',[736696 737060],...
     'XTickLabel',{'Jan','Mar','May','Jul','Sep','Nov','Dec'},...
-    'YTick',[0:5:30],...
-    'Ylim',[0 30]);
+    'YTick',[0:5:20],...
+    'Ylim',[0 20]);
 ylabel(ax3,...
-    'Annual Solar Azimuth');
+    'Solar Azimuth Angle (deg)');
 xlabel(ax3,...
     'Date \rightarrow');
 
@@ -250,6 +270,8 @@ pos_3(3) = pos_3(3)*1.1;                                      % Scale plot verti
 set(ax1, 'Position', pos_3);
 hold off
 
+disp('Finished Fig3')
+
 %% Fig4
 fig4 =  figure('Position',...                               % draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
@@ -257,33 +279,49 @@ fig4 =  figure('Position',...                               % draw figure
 set(fig4,'numbertitle','off',...                            % Give figure useful title
         'name','Annual Zenith',...
         'Color','white');
+
+% plot
+[n m] = size(SunZenithYear);
+for i=1:m
+    plot_num = strcat('p4_',num2str(i));
+    variable.(plot_num) = plot(dateMonthDay,SunZenithYear(:,i),...
+	'LineWidth',2);
+    hold on
+end
+
+% Axis
 ax4 = gca;
-p4_1 = plot(date,90-SunElevationYearMax,...
-    'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
-	'LineStyle','-',...
-	'LineWidth',1);
 set(ax4,...
     'FontSize',14,...
     'FontName',fontName,...
-    'Box','off',...
+    'Box','on',...
     'XMinorTick','off',...
     'YMinorTick','on',...
-    'XGrid','on',...
+    'XGrid','off',...
     'XTick',[736696 736755 736816 736877 736939 737000 737060],...
     'Xlim',[736696 737060],...
     'XTickLabel',{'Jan','Mar','May','Jul','Sep','Nov','Dec'},...
-    'YTick',[0:10:60],...
-    'Ylim',[0 60]);
+    'YTick',[0:30:100],...
+    'Ylim',[0 100]);
 ylabel(ax4,...
-    'Annual Sun Zenith Angle (deg)');
+    'Sun Zenith Angle (deg)');
 xlabel(ax4,...
     'Date \rightarrow');
 hold off
 
-% Global Axes and labels
-% set(findobj(gcf,'type','axes'),...
-hold off
-
+% Ticks formatting 
+yt=get(ax4,'ytick');
+for k=1:numel(yt);
+yt4{k}=sprintf('%d°',yt(k));
+end
+set(ax4,'yticklabel',yt4);
+legend4 = legend(ax4,...
+    TimeZenith,...
+    'Position',[0.4566 0.2555 0.0700 0.1970],...
+    'Location','best',...
+    'EdgeColor',[1 1 1],...
+	'Box','off');
+% reorderLegend([1,3,2],ax4);
 
 pos_4 = get(ax4, 'Position');                                 % Current position
 pos_4(1) = 0.08;                                              % Shift Plot horizontally
@@ -292,12 +330,18 @@ pos_4(3) = pos_4(3)*1.1;                                      % Scale plot verti
 set(ax1, 'Position', pos_4)
 hold off
 
+disp('Finished Fig4')
+
+%% Output
 set(fig1, 'Visible', 'on');
 set(fig2, 'Visible', 'on');
 set(fig3, 'Visible', 'on');
 set(fig4, 'Visible', 'on');
 
 % export (fix for missing CMU fonts in eps export)
-% export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
+export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
 export_fig ('../Report/images/Solar_Azimith_Angle_Daily.eps',fig2)
+export_fig ('../Report/images/Solar_Azimith_Min_Annual.eps',fig3)
+export_fig ('../Report/images/Solar_Zenith_Annual.eps',fig4)
+
 
