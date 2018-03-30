@@ -41,7 +41,7 @@ end
 %% Zenith
 i=1;
 for j=sort([5 6 7 8 9 10 11 12])  % from 6am to 12pm
-    TimeZenith{1,i} = Time{1,(j*6)+1}
+    TimeZenith{1,i} = Time{1,(j*6)+1};
     SunZenithYear(:,i) = raw_elevation(:,(j*6));    % Time columns in increments of 10 min
 	i = i + 1;
 end
@@ -63,7 +63,7 @@ for k=1:length(days)
     i = i + 1;
 end
 
-% Dates
+%% Dates
 dateMonth = datetime(DateYear,'ConvertFrom','excel','Format','MMMM');
 dateMonthDay = datetime(DateYear,'ConvertFrom','excel','Format','MMMM dd');
 time = datetime(Time,'InputFormat','HH:mm','Format','HH:mm');
@@ -74,10 +74,12 @@ time = datetime(Time,'InputFormat','HH:mm','Format','HH:mm');
 days = [1:366];
 % equation_time = delta_time(days);
 
-%% Declination Angle
-d = 360./365.*(datenum(days) + 284);
-DeclinationAngle = 23.45 * sin(rad2deg(d));
-theoretical_tilt = Latitude-DeclinationAngle;
+%% Tilt Angle
+date_days = [1:366];
+d_angle = degtorad(360./365.*date_days + 284);
+DeclinationAngle = -23.45 * sin(d_angle);
+TiltOptimal = -(Latitude-DeclinationAngle);
+TiltAverage = sum(TiltOptimal)/numel(TiltOptimal);
 
 disp('Finished Output Variable preperation');
 
@@ -258,7 +260,7 @@ set(ax3,...
     'YTick',[0:5:20],...
     'Ylim',[0 20]);
 ylabel(ax3,...
-    'Solar Azimuth Angle (deg)');
+    'Minimim Solar Azimuth Angle (deg)');
 xlabel(ax3,...
     'Date \rightarrow');
 
@@ -304,7 +306,7 @@ set(ax4,...
     'YTick',[0:30:100],...
     'Ylim',[0 100]);
 ylabel(ax4,...
-    'Sun Zenith Angle (deg)');
+    'Solar Zenith Angle (deg)');
 xlabel(ax4,...
     'Date \rightarrow');
 hold off
@@ -327,21 +329,86 @@ pos_4 = get(ax4, 'Position');                                 % Current position
 pos_4(1) = 0.08;                                              % Shift Plot horizontally
 pos_4(2) = pos_4(2) + 0.03;                                   % Shift Plot vertically
 pos_4(3) = pos_4(3)*1.1;                                      % Scale plot vertically
-set(ax1, 'Position', pos_4)
+set(ax4, 'Position', pos_4)
 hold off
 
 disp('Finished Fig4')
+
+%% Fig5
+fig5 =  figure('Position',...                               % draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
+        'Visible', 'off');
+set(fig5,'numbertitle','off',...                            % Give figure useful title
+        'name','Annual Zenith',...
+        'Color','white');
+
+% plot
+p5_1 = plot(dateMonthDay,TiltOptimal,...
+	'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
+	'LineStyle','-',...
+	'LineWidth',2);
+hold on
+p5_2 = refline(0,TiltAverage);
+set(p5_2,'Color',[0.9 0.18 0.18 .6],...                 
+        'LineStyle','-',...
+        'LineWidth',2);
+hold on
+% Axis
+ax5 = gca;
+set(ax5,...
+    'FontSize',14,...
+    'FontName',fontName,...
+    'Box','on',...
+    'XMinorTick','off',...
+    'YMinorTick','on',...
+    'XGrid','off',...
+    'XTick',[736696 736755 736816 736877 736939 737000 737060],...
+    'Xlim',[736696 737060],...
+    'XTickLabel',{'Jan','Mar','May','Jul','Sep','Nov','Dec'},...
+    'YTick',sort([0:6:60 round(TiltAverage,2)]),...
+    'Ylim',[0 60]);
+ylabel(ax5,...
+    'Tilt Angle (deg)');
+xlabel(ax5,...
+    'Date \rightarrow');
+
+% Ticks formatting
+% ax5.YAxis.TickLabelFormat = '%,.1f';
+yt=get(ax5,'ytick');
+for k=1:numel(yt);
+yt5{k}=sprintf('%.2f°',yt(k));
+end
+set(ax5,'yticklabel',yt5);
+legend5 = legend(ax5,...
+    {'Optimal Tilt Angle','Average Tilt Angle'},...
+    'Position',[0.739 0.234 0.142 0.0782],...
+    'Location','best',...
+    'EdgeColor',[1 1 1],...
+	'Box','off');
+
+pos_5 = get(ax5, 'Position');                                 % Current position
+pos_5(1) = 0.08;                                              % Shift Plot horizontally
+pos_5(2) = pos_5(2) + 0.03;                                   % Shift Plot vertically
+pos_5(3) = pos_5(3)*1.1;                                      % Scale plot vertically
+set(ax5, 'Position', pos_5)
+hold off
+
+disp('Finished Fig5')
 
 %% Output
 set(fig1, 'Visible', 'on');
 set(fig2, 'Visible', 'on');
 set(fig3, 'Visible', 'on');
 set(fig4, 'Visible', 'on');
+set(fig5, 'Visible', 'on');
 
 % export (fix for missing CMU fonts in eps export)
 export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
 export_fig ('../Report/images/Solar_Azimith_Angle_Daily.eps',fig2)
 export_fig ('../Report/images/Solar_Azimith_Min_Annual.eps',fig3)
 export_fig ('../Report/images/Solar_Zenith_Annual.eps',fig4)
+export_fig ('../Report/images/Optimal_Tilt_Angle.eps',fig5)
+
+disp('Images exported')
 
 
