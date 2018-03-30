@@ -6,8 +6,10 @@
 % To extend the code to different selected data or a different text file,
 % generate a function instead of a script.
 
-clc; clear all;
-warning off;
+clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
+
+view    = [1];
+output  = [];
 
 %% Initialize variables.
 filename_H = '/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20130101_GRT_H.dat.txt';
@@ -20,7 +22,7 @@ startRow1 = 5;
 formatSpec = '%s%*s%s%s%s%s%s%s%s%[^\n\r]';
 
 %% Open the text file.
-fileID1 = fopen(filename1,'r');
+fileID1 = fopen(filename_H,'r');
 
 %% Read columns of data according to format string.
 % This call is based on the structure of the file used to generate this
@@ -118,14 +120,6 @@ BP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 5));
 RH1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 6));
 Rain_Tot1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 7));
 
-% GHI_CMP1(isnan(GHI_CMP1))=0;
-% DNI_CHP1(isnan(DNI_CHP1))=0;
-% DHI_CMP1(isnan(DHI_CMP1))=0;
-% Air_Temp1(isnan(Air_Temp1))=0;
-% BP1(isnan(BP1))=0;
-% RH1(isnan(RH1))=0;
-% Rain_Tot1(isnan(Rain_Tot1))=0;
-
 DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934];
 DateMonthLimit = [735600 735965];
 DateMonthLabel = {'                  Jan','                  Feb','                  Mar','                  Apr',...
@@ -165,9 +159,10 @@ scr = get(groot,'ScreenSize');                              % screen resolution
 phi = (1 + sqrt(5))/2;
 ratio = phi/3;
 offset = [ scr(3)/4 scr(4)/4]; 
-fig_grt_avg =  figure('Position',...                               % draw figure
-        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio]);
-set(fig_grt_avg,'numbertitle','off',...                            % Give figure useful title
+fig_grt_avg = figure('Position',...                               % draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
+        'Visible', 'off',...
+        'numbertitle','off',...                            % Give figure useful title
         'name','Global Horizontal Irradiance Average (Hourly)',...
         'Color','white');
 fontName='Helvetica';
@@ -220,9 +215,30 @@ hold on
 pos = get(ax1, 'Position');                                 % Current position
 pos(1) = 0.07;                                              % Shift Plot horizontally
 pos(2) = pos(2) + 0.01;                                     % Shift Plot vertically
-pos(3) = pos(3)*1.175;                                      % Scale plot vertically
+pos(3) = pos(3)*1.175;                                      % Scale plot horizontally
+pos(4) = pos(4)*1.1;                                        % Scale plot vertically
 set(ax1, 'Position', pos)
 hold off
 
-% export (fix for missing CMU fonts in eps export)
-% export_fig ('../Report/images/GHI_Hourly_Measurements_Average.eps',fig_grt)
+%% Output
+if ismember(1,view)
+    set(fig_grt_avg, 'Visible', 'on');
+    WinOnTop( fig_grt_avg, true );
+end
+if sum(view)<0
+    disp('Image view disabled')
+end
+if sum(output)>1
+	disp('Exporting images... please wait')
+end
+if ismember(1,output)
+	export_fig ('../Report/images/GHI_Hourly_Measurements_Average.eps',fig_grt_avg)
+    disp('Exported Figure')
+    close(fig1);
+end
+if sum(output)<0
+	disp('Image export disabled')
+else
+	disp('All images exported')
+end
+disp('Script complete')

@@ -613,10 +613,10 @@ if ismember(5,view)
     set(fig5, 'Visible', 'on');
     WinOnTop( fig5, true );
 end
-if sum(view)<0
+if sum(view)<1
     disp('Image view disabled')
 end
-if sum(output)>1
+if sum(output)>0
 	disp('Exporting images... please wait')
 end
 
@@ -645,7 +645,7 @@ if ismember(1,output)
     disp('Exported Fig1')
     close(fig1);
 end
-if sum(output)<0
+if sum(output)<1
 	disp('Image export disabled')
 else
 	disp('All images exported')
