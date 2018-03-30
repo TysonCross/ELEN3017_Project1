@@ -1,18 +1,10 @@
-%% Import data from text file.
-% Script for importing data from the following text file:
-%
-%    /Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20130101_GRT_H.dat.txt
-%
-% To extend the code to different selected data or a different text file,
-% generate a function instead of a script.
-
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1];
+view    = [1 2];
 output  = [];
 
 %% Initialize variables.
-filename_H = '/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20130101_GRT_H.dat.txt';
+filename_H = '/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20130901_GRT_H.dat.txt';
 DateStep = hours(1);
 delimiter1 = ',';
 startRow1 = 5;
@@ -108,17 +100,17 @@ GHI_CMP1_H = NaN(numel(allDates_H),1);
 DNI_CHP1_H = NaN(numel(allDates_H),1);
 DHI_CMP1_H = NaN(numel(allDates_H),1);
 Air_Temp1_H = NaN(numel(allDates_H),1);
-BP1_H = NaN(numel(allDates_H),1);
-RH1_H = NaN(numel(allDates_H),1);
-Rain_Tot1_H = NaN(numel(allDates_H),1);
+% BP1_H = NaN(numel(allDates_H),1);
+% RH1_H = NaN(numel(allDates_H),1);
+% Rain_Tot1_H = NaN(numel(allDates_H),1);
 
 GHI_CMP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 1));
 DNI_CHP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 2));
 DHI_CMP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 3));
 Air_Temp1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 4));
-BP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 5));
-RH1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 6));
-Rain_Tot1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 7));
+% BP1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 5));
+% RH1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 6));
+% Rain_Tot1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 7));
 
 DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934];
 DateMonthLimit = [735600 735965];
@@ -126,27 +118,30 @@ DateMonthLabel = {'                  Jan','                  Feb','             
                   '                  May','                  Jun','                  Jul','                  Aug',...
                   '                  Sep','                  Oct','                  Nov','                  Dec'};
 
+%% Curve estimate
 width1 = length(GHI_CMP1_H);
 order1 = floor( log10(max(GHI_CMP1_H)));
 value1 = ceil(max(GHI_CMP1_H)/(10^order1));
 height1 = value1*10^order1;
 
 t1 = [1:width1];
-period1 = 365;
-freq1 = 2*pi/period1;
-offset1 = (5*30)*pi/365;
-sine1 = 1/sqrt(2^3)*max(GHI_CMP1_H)*sin(t1*freq1 + offset1) + mean2(GHI_CMP1_H);
+period1 = 12.5*366;
+freq1 = pi/period1;
+offset1 = 0.99;
+max_height = max(GHI_CMP1_H);
+sine1 = 1.28/sqrt(2^5)*max_height*sin(t1*freq1 + offset1) + 730;
 
-%% Fit: 'Fourier fit 1'.
-[xData, yData] = prepareCurveData( DateNum_H, GHI_CMP1_H );
+
+Average_air_temp = mean(Air_Temp1_H,'omitnan');
+
+%% Fit: 'Fourier Fit'.
+[xData, yData] = prepareCurveData( DateNum_H, Air_Temp1_H );
 
 % Set up fittype and options.
-ft = fittype( 'fourier1' );
+ft = fittype( 'fourier3' );
 opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
 opts.Display = 'Off';
-opts.Normalize = 'on';
-opts.Robust = 'Bisquare';
-opts.StartPoint = [0 0 0 1.84896230036409];
+opts.StartPoint = [0 0 0 0 0 0 0 0.00630314526719285];
 
 % Fit model to data.
 [fitresult, ~] = fit( xData, yData, ft, opts );
@@ -155,88 +150,185 @@ opts.StartPoint = [0 0 0 1.84896230036409];
 clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns R;
 
 %% Display setting and output setup
-scr = get(groot,'ScreenSize');                              % screen resolution
+scr = get(groot,'ScreenSize');                                  % screen resolution
 phi = (1 + sqrt(5))/2;
 ratio = phi/3;
 offset = [ scr(3)/4 scr(4)/4]; 
-fig_grt_avg = figure('Position',...                               % draw figure
-        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
-        'Visible', 'off',...
-        'numbertitle','off',...                            % Give figure useful title
-        'name','Global Horizontal Irradiance Average (Hourly)',...
-        'Color','white');
 fontName='Helvetica';
-set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
+set(0,'defaultAxesFontName', fontName);                         % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
-set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
+set(groot,'FixedWidthFontName', 'ElroNet Monospace')            % replace with your system's monospaced font
 
 %% Draw plots
-p1_1 = plot(allDates_H,GHI_CMP1_H,...                           
-    'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
-	'LineStyle','-',...
-	'LineWidth',1);
-hold on
+%% Fig 1 - Global Horizontal Irradiance Average (Hourly)
+if ismember(1,view) || ismember(1,output)
+    fig_1 = figure('Position',...                            	% draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
+        'Visible', 'off',...
+        'numbertitle','on',...                                  % Give figure useful title
+        'name','Global Horizontal Irradiance Average (Hourly)',...
+        'Color','white');
+    
+    p1_1 = plot(allDates_H,GHI_CMP1_H,...                           
+        'DisplayName','Measured GHI, Graaf-Reinet',...
+        'Color',[0.729411764705882 0.831372549019608 0.956862745098039 0.6],...     % [R G B Alpha]
+        'LineStyle','-',...
+        'LineWidth',0.8,...
+        'MarkerFaceColor',[0 0.447058826684952 0.74117648601532],...
+        'MarkerEdgeColor',[0 0.447058826684952 0.74117648601532],...
+        'MarkerSize',2,...
+        'Marker','o');
+    hold on
 
-p2_1 = plot(fitresult1);
-set(p2_1,...
-    'Color',[0.9 0.18 0.18 .6],...                 
-	'LineStyle',':',...
-	'LineWidth',2);
-hold on
+	p1_2 = plot(allDates_H,sine1,...
+         'DisplayName','Fitted Curve',...
+        'Color',[0.18 0.18 0.18 .6],...                 
+        'LineStyle','-',...
+        'LineWidth',2);
+    hold on
 
-% Axes and labels
-ax1 = gca;
-box(ax1,'off');
-set(ax1,'FontSize',14,...
-    'TickDir','out',...
-    'YMinorTick','off',...
-    'XMinorTick','off',...
-	'XTick',DateMonthIndex,...
-    'Xlim',DateMonthLimit,...
-	'XTickLabel',DateMonthLabel,...
-    'FontName',fontName);
-title('GHI Graaf-Reinet',...
-    'FontSize',14,...
-    'FontName',fontName);
-ylabel('Global Insolation \rightarrow')%,...
-xlabel('Date \rightarrow');
-% datetick('x','dd mmm yyyy','keepticks','keeplimits')
+    % Axes and labels
+    ax1 = gca;
+    box(ax1,'off');
+    set(ax1,'FontSize',14,...
+        'TickDir','out',...
+        'YMinorTick','off',...
+        'XMinorTick','off',...
+        'XTick',DateMonthIndex,...
+        'Xlim',DateMonthLimit,...
+        'XTickLabel',DateMonthLabel,...
+        'FontName',fontName);
+    ylabel('Global Insolation \rightarrow')%,...
+    xlabel('Date \rightarrow');
+    % datetick('x','dd mmm yyyy','keepticks','keeplimits')
 
-% Legend
-legend1 = legend(ax1,'show','legend','Location','North',['Measured GHI',GHI_labels]);
-set(legend1,...
-	'Box','off',...
-    'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
-    'EdgeColor',[1 1 1]);
-legend1.PlotChildren = legend1.PlotChildren([1 7 6 5 4 3 2]);
-hold on
+    % Legend
+    legend1 = legend(ax1,'show',...
+        'Location','North',...
+        'Box','on',...
+        'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
+        'EdgeColor',[1 1 1]);
+%     legend1.PlotChildren = legend1.PlotChildren([1 2]);
+    hold on
 
-% Adjust figure
-pos = get(ax1, 'Position');                                 % Current position
-pos(1) = 0.07;                                              % Shift Plot horizontally
-pos(2) = pos(2) + 0.01;                                     % Shift Plot vertically
-pos(3) = pos(3)*1.175;                                      % Scale plot horizontally
-pos(4) = pos(4)*1.1;                                        % Scale plot vertically
-set(ax1, 'Position', pos)
-hold off
+    % Adjust figure
+    pos = get(ax1, 'Position');                                 % Current position
+    pos(1) = 0.07;                                              % Shift Plot horizontally
+    pos(2) = pos(2) - 0.02;                                     % Shift Plot vertically
+    pos(3) = pos(3)*1.175;                                      % Scale plot horizontally
+    pos(4) = pos(4)*1.05;                                        % Scale plot vertically
+    set(ax1, 'Position', pos)
+    hold off
+    
+    disp('Finished plotting Figure 1...')
+end
+
+%% Fig 2 - Average Air Temperature
+if ismember(2,view) || ismember(1,output)
+    fig_2 = figure('Position',...                            	% draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
+        'Visible', 'off',...
+        'numbertitle','on',...                                  % Give figure useful title
+        'name','Average Air Temperature',...
+        'Color','white');
+    ax2 = gca;
+    hold(ax2,'on');
+    box(ax2,'on');
+    
+    p2_1 = plot(allDates_H,Air_Temp1_H,...
+        'DisplayName','Measured Air Temp',...
+        'Color',[0.729411764705882 0.831372549019608 0.956862745098039 0.8],...         % [R G B Alpha]
+        'LineStyle','-',...
+        'LineWidth',1);
+    hold on
+    
+	p2_2 = plot(fitresult);
+    set(p2_2,...
+        'DisplayName','Moving Average Air Temp',...
+        'Color',[0.9 0.18 0.18 .6],...                 
+        'LineStyle','-',...
+        'LineWidth',2);
+    hold on
+    
+    legend('hide');
+    legend('off');
+    
+    
+    p2_3 = refline(0,Average_air_temp);
+    set(p2_3,'Color',[0.18 0.9 0.18 .6],... 
+            'DisplayName','Mean Air Temp',...
+            'LineStyle','-',...
+            'LineWidth',2);
+    hold on
+    
+
+    % Axes and labels
+    set(ax2,'FontSize',14,...
+        'YMinorTick','off',...
+        'XMinorTick','off',...
+        'XTick',DateMonthIndex,...
+        'Xlim',DateMonthLimit,...
+        'XTickLabel',DateMonthLabel,...
+        'YTick',sort([0:5:45 Average_air_temp]),...
+        'Ylim',[0 45],...
+        'FontName',fontName);
+    ylabel('Temperature (celcius) \rightarrow')%,...
+    xlabel('Date \rightarrow');
+    
+    % Ticks formatting
+    %     datetick('x','dd mmm yyyy','keepticks','keeplimits')
+    yt=get(ax2,'ytick');
+    for k=1:numel(yt);
+    yt2{k}=sprintf('%.2f°',yt(k));
+    end
+    set(ax2,'yticklabel',yt2);
+
+    % Legend
+    legend2 = legend(ax2,'show');
+    set(legend2,'Position',[0.42519305019305 0.788253477588872 0.122104247104247 0.0772797527047914],...
+        'Box','on',...
+        'EdgeColor',[1 1 1]);
+%     legend1.PlotChildren = legend1.PlotChildren([1 2]);
+    hold on
+
+    % Adjust figure
+    pos_2 = get(ax2, 'Position');                            	% Current position
+    pos_2(1) = 0.05;                                           	% Shift Plot horizontally
+    pos_2(2) = pos_2(2) - 0.02;                                	% Shift Plot vertically
+    pos_2(3) = pos_2(3)*1.175;                               	% Scale plot horizontally
+    pos_2(4) = pos_2(4)*1.05;                                	% Scale plot vertically
+    set(ax2, 'Position', pos_2)
+    hold off
+    
+    disp('Finished plotting Figure 2...')
+end
 
 %% Output
 if ismember(1,view)
-    set(fig_grt_avg, 'Visible', 'on');
-    WinOnTop( fig_grt_avg, true );
+    set(fig_1, 'Visible', 'on');
+    WinOnTop( fig_1, true );
 end
-if sum(view)<0
+if ismember(2,view)
+    set(fig_2, 'Visible', 'on');
+    WinOnTop( fig_2, true );
+end
+if sum(view)<1
     disp('Image view disabled')
 end
-if sum(output)>1
+if sum(output)>0
 	disp('Exporting images... please wait')
 end
 if ismember(1,output)
-	export_fig ('../Report/images/GHI_Hourly_Measurements_Average.eps',fig_grt_avg)
+	export_fig ('../Report/images/GHI_Hourly_Measurements_Average.eps',fig_1)
     disp('Exported Figure')
-    close(fig1);
+    close(fig_1);
 end
-if sum(output)<0
+if ismember(2,output)
+	export_fig ('../Report/images/Air_Temp_Average.eps',fig_2)
+    disp('Exported Figure')
+    close(fig_2);
+end
+if sum(output)<1
 	disp('Image export disabled')
 else
 	disp('All images exported')
