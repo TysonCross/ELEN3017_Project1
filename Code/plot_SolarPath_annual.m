@@ -1,4 +1,6 @@
-clc; clear all;
+% clc; clear all;
+warning off;
+
 % Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
 Longitude = 24.58582;
@@ -72,9 +74,11 @@ for i=1:length(dateMonthDay)
     DateLookup{i} = {dateMonthDay(i), datenum(dateMonthDay(i))};
 end
 
-DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934, 735965];
+DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934];
 DateMonthLimit = [735600 735965];
-DateMonthLabel = {'Jan', 'Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan'};
+DateMonthLabel = {'                  Jan','                  Feb','                  Mar','                  Apr',...
+                  '                  May','                  Jun','                  Jul','                  Aug',...
+                  '                  Sep','                  Oct','                  Nov','                  Dec'};
 
 %% Equation of Solar Time
 % syms delta_time n;
@@ -411,12 +415,10 @@ set(fig4, 'Visible', 'on');
 set(fig5, 'Visible', 'on');
 
 % export (fix for missing CMU fonts in eps export)
-export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
-export_fig ('../Report/images/Solar_Azimith_Angle_Daily.eps',fig2)
-export_fig ('../Report/images/Solar_Azimith_Min_Annual.eps',fig3)
-export_fig ('../Report/images/Solar_Zenith_Annual.eps',fig4)
-export_fig ('../Report/images/Optimal_Tilt_Angle.eps',fig5)
+% export_fig ('../Report/images/Solar_Altitude_Daily.eps',fig1)
+% export_fig ('../Report/images/Solar_Azimith_Angle_Daily.eps',fig2)
+% export_fig ('../Report/images/Solar_Azimith_Min_Annual.eps',fig3)
+% export_fig ('../Report/images/Solar_Zenith_Annual.eps',fig4)
+% export_fig ('../Report/images/Optimal_Tilt_Angle.eps',fig5)
 
-disp('Images exported')
-
-
+% disp('Images exported')
