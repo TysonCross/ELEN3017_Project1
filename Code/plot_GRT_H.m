@@ -1,17 +1,20 @@
 %% Import data from text file.
 % Script for importing data from the following text file:
 %
-%    /Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20140101_GRT_.dat.txt
+%    /Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20140101_GRT_D.dat.txt
 %
 % To extend the code to different selected data or a different text file,
 % generate a function instead of a script.
 
-clc; warning off;
+% clc; clear all;
+warning off;
+plot_GRT_D
+plot_SolarPath_annual
 
 %% Initialize variables.
-filename1 = '/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20140101_GRT_D.dat.txt';
-% DateStep = hours(1);
-DateStep = days(1);
+filename1 = '/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/20140101_GRT_H.dat.txt';
+DateStep = hours(1);
+% DateStep = days(1);
 delimiter1 = ',';
 startRow1 = 5;
 
@@ -118,41 +121,37 @@ BP1(existingDates) = cell2mat(rawNumericColumns1(:, 5));
 RH1(existingDates) = cell2mat(rawNumericColumns1(:, 6));
 Rain_Tot1(existingDates) = cell2mat(rawNumericColumns1(:, 7));
 
-DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934 735965];
+% GHI_CMP1(isnan(GHI_CMP1))=0;
+% DNI_CHP1(isnan(DNI_CHP1))=0;
+% DHI_CMP1(isnan(DHI_CMP1))=0;
+% Air_Temp1(isnan(Air_Temp1))=0;
+% BP1(isnan(BP1))=0;
+% RH1(isnan(RH1))=0;
+% Rain_Tot1(isnan(Rain_Tot1))=0;
+
+DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934];
 DateMonthLimit = [735600 735965];
 DateMonthLabel = {'                  Jan','                  Feb','                  Mar','                  Apr',...
                   '                  May','                  Jun','                  Jul','                  Aug',...
                   '                  Sep','                  Oct','                  Nov','                  Dec'};
 
 % Monthly Totals
-for i=1:numel(DateMonthIndex)-1
-    offset_index = DateMonthIndex(1);
-    index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
-    GHI_Monthly(i) = sum(GHI_CMP1(index),'omitnan');
-    DNI_Monthly(i) = sum(DNI_CHP1(index),'omitnan');
-    DHI_Monthly(i) = sum(DHI_CMP1(index),'omitnan');
-end
+% for i=1:numel(DateMonthIndex)-1
+%     offset_index = DateMonthIndex(1);
+%     index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
+%     GHI_Monthly(i) = sum(GHI_CMP1(index),'omitnan');
+%     DNI_Monthly(i) = sum(DNI_CHP1(index),'omitnan');
+%     DHI_Monthly(i) = sum(DHI_CMP1(index),'omitnan');
+% end
 
-GHI_Total = sum(GHI_CMP1(1:end-1),'omitnan');
-GHI_Monthly_Total = sum(GHI_Monthly,'omitnan');
-DNI_Total = sum(DNI_CHP1(1:end-1),'omitnan');
-DNI_Monthly_Total = sum(DNI_Monthly,'omitnan');
-DHI_Total = sum(DHI_CMP1(1:end-1),'omitnan');
-DHI_Monthly_Total = sum(DHI_Monthly,'omitnan');
-
-tol = 1.0e-06;
-assert( (GHI_Total - GHI_Monthly_Total ) ./ GHI_Total .*100 < tol );
-assert( (DNI_Total - DNI_Monthly_Total ) ./ DNI_Total .*100 < tol );
-assert( (DHI_Total - DHI_Monthly_Total ) ./ DHI_Total .*100 < tol );
-
-% Weighting for title angle:
-for i=1:12
-    GHI_Weighting(i) = GHI_Monthly(i)/GHI_Total;
-end
-assert(sum(GHI_Weighting,'omitnan') - 1.0 < tol);
+% tol = 0.0000001;
+% assert(...
+% (((sum(GHI_CMP1(1:end-1),'omitnan')-sum(GHI_Monthly,'omitnan') ) ./ sum(GHI_CMP1,'omitnan') *100) < tol ) &&...
+% (((sum(DNI_CHP1(1:end-1),'omitnan')-sum(DNI_Monthly,'omitnan') ) ./ sum(DNI_CHP1,'omitnan') *100) < tol ) &&...
+% (((sum(DHI_CMP1(1:end-1),'omitnan')-sum(DHI_Monthly,'omitnan') ) ./ sum(DHI_CMP1,'omitnan') *100) < tol ) );
 
 % Theoretical Estimates (from solar plot)
-DNI_estimate = 1000; %max(DNI_CHP1)*1.1;
+DNI_estimate = 1300; %max(DNI_CHP1)*1.1;
 GHI_Theoretical =  DNI_estimate*cos(deg2rad((SunZenithYear)));
 
 width1 = length(GHI_CMP1);
@@ -166,47 +165,46 @@ freq1 = 2*pi/period1;
 offset1 = (5*30)*pi/365;
 sine1 = 1/sqrt(2^3)*max(GHI_CMP1)*sin(t1*freq1 + offset1) + mean2(GHI_CMP1);
 
-% %% Fit: 'Fourier fit 1'.
-% [xData, yData] = prepareCurveData( DateNum1, GHI_CMP1 );
+% %% Fit: 'Fourier Fit'.
+% [xData1, yData1] = prepareCurveData( DateNum1, DHI_CMP1 );
 % 
 % % Set up fittype and options.
-% ft = fittype( 'fourier1' );
-% opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
-% opts.Display = 'Off';
-% opts.Normalize = 'on';
-% opts.Robust = 'Bisquare';
-% opts.StartPoint = [0 0 0 1.84896230036409];
+% ft1 = fittype( 'fourier1' );
+% opts1 = fitoptions( 'Method', 'NonlinearLeastSquares' );
+% opts1.Display = 'Off';
+% opts1.Robust = 'Bisquare';
+% opts1.StartPoint = [0 0 0 0.0157868977567326];
 % 
 % % Fit model to data.
-% [fitresult, ~] = fit( xData, yData, ft, opts );
+% [fitresult1,~] = fit( xData1, yData1, ft1, opts1 );
 
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns R;
 
-% %% Display setting and output setup
-% scr = get(groot,'ScreenSize');                              % screen resolution
-% phi = (1 + sqrt(5))/2;
-% ratio = phi/3;
-% offset = [ scr(3)/4 scr(4)/4]; 
-% fig_grt =  figure('Position',...                               % draw figure
-%         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio]);
-% set(fig_grt,'numbertitle','off',...                            % Give figure useful title
-%         'name','Global Horizontal Irradiance (Daily)',...
-%         'Color','white');
-% fontName='Helvetica';
-% set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
-% set(0,'defaultTextFontName', fontName);
-% set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
+%% Display setting and output setup
+scr = get(groot,'ScreenSize');                              % screen resolution
+phi = (1 + sqrt(5))/2;
+ratio = phi/3;
+offset = [ scr(3)/4 scr(4)/4]; 
+fig_grt =  figure('Position',...                               % draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio]);
+set(fig_grt,'numbertitle','off',...                            % Give figure useful title
+        'name','Global Horizontal Irradiance (Hourly)',...
+        'Color','white');
+fontName='Helvetica';
+set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
+set(0,'defaultTextFontName', fontName);
+set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
 
 %% Draw plots
-% p1_1 = plot(DateNum1,GHI_CMP1,...                           
-%     'Color',[0.9 0.18 0.18 .6],...                          % [R G B Alpha]
-% 	'LineStyle','-',...
-% 	'LineWidth',2);
-% hold on
+p1_1 = plot(allDates,GHI_CMP1,...                           
+    'Color',[0.18 0.18 0.9 .6],...                          % [R G B Alpha]
+	'LineStyle','-',...
+	'LineWidth',1);
+hold on
 
 % p1_2 = plot(allDates,DNI_CHP1,...                           
-%     'Color',[0.18 0.6 0.6 .6],...                          % [R G B Alpha]
+%     'Color',[0.9 0.18 0.18 .6],...                          % [R G B Alpha]
 % 	'LineStyle','-',...
 % 	'LineWidth',1);
 % hold on
@@ -216,7 +214,7 @@ clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col nu
 % 	'LineStyle','-',...
 % 	'LineWidth',1);
 % hold on
-
+% 
 % p2_1 = plot(fitresult1);
 % set(p2_1,...
 %     'Color',[0.9 0.18 0.18 .6],...                 
@@ -224,40 +222,52 @@ clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col nu
 % 	'LineWidth',2);
 % hold on
 
-% % Axes and labels
-% ax1 = gca;
-% box(ax1,'off');
-% set(ax1,'FontSize',14,...
-%     'TickDir','out',...
-%     'YMinorTick','off',...
-%     'XMinorTick','off',...
-% 	'XTick',DateMonthIndex(1:end-1),...
-%     'Xlim',DateMonthLimit,...
-% 	'XTickLabel',DateMonthLabel,...
-%     'FontName',fontName);
-% title('GHI Graaf-Reinet',...
-%     'FontSize',14,...
-%     'FontName',fontName);
-% ylabel('Global Insolation \rightarrow')%,...
-% xlabel('Date \rightarrow');
-% % datetick('x','dd mmm yyyy','keepticks','keeplimits')
-% 
-% % Legend
-% legend1 = legend(ax1,'show','Location','North','Measured GHI','Measured DHI','Measured DNI');
-% set(legend1,...
-% 	'Box','off',...
-%     'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
-%     'EdgeColor',[1 1 1]);
-% % legend1.PlotChildren = legend1.PlotChildren([1 7 6 5 4 3 2]);
-% hold on
+[n m] = size(GHI_Theoretical);
+GHI_theory_times = [1 4 5 6 7 8];
+k=1;
+for i=[1 4 5 6 7 8]
+    GHI_labels(k)=strcat({'Theoretical GHI at'},{' '},TimeZenith(i));
+    plot_num = strcat('p3_',num2str(i));
+    variable.(plot_num) = plot(dateMonthDay,GHI_Theoretical(:,i),...
+	'LineWidth',2);
+    k=k+1;
+    hold on
+end
 
-% % Adjust figure
-% pos = get(ax1, 'Position');                                 % Current position
-% pos(1) = 0.07;                                              % Shift Plot horizontally
-% pos(2) = pos(2) + 0.01;                                     % Shift Plot vertically
-% pos(3) = pos(3)*1.175;                                      % Scale plot vertically
-% set(ax1, 'Position', pos)
-% hold off
+% Axes and labels
+ax1 = gca;
+box(ax1,'off');
+set(ax1,'FontSize',14,...
+    'TickDir','out',...
+    'YMinorTick','off',...
+    'XMinorTick','off',...
+	'XTick',DateMonthIndex,...
+    'Xlim',DateMonthLimit,...
+	'XTickLabel',DateMonthLabel,...
+    'FontName',fontName);
+title('GHI Graaf-Reinet',...
+    'FontSize',14,...
+    'FontName',fontName);
+ylabel('Global Insolation \rightarrow')%,...
+xlabel('Date \rightarrow');
+% datetick('x','dd mmm yyyy','keepticks','keeplimits')
+
+% Legend
+legend1 = legend(ax1,'show','legend','Location','North',['Measured GHI',GHI_labels]);
+set(legend1,...
+	'Box','off',...
+    'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
+    'EdgeColor',[1 1 1]);
+legend1.PlotChildren = legend1.PlotChildren([1 7 6 5 4 3 2]);
+hold on
+
+% Adjust figure
+pos = get(ax1, 'Position');                                 % Current position
+pos(1) = 0.07;                                              % Shift Plot horizontally
+pos(2) = pos(2) + 0.01;                                     % Shift Plot vertically
+pos(3) = pos(3)*1.175;                                      % Scale plot vertically
+set(ax1, 'Position', pos)
+hold off
 
 % export (fix for missing CMU fonts in eps export)
-% export_fig ('../Report/images/GHI_Daily_Measurements.eps',fig_grt)
+% export_fig ('../Report/images/GHI_Hourly_Measurements.eps',fig_grt)
