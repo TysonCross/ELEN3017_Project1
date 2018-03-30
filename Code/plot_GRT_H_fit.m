@@ -189,7 +189,7 @@ if ismember(1,view) || ismember(1,output)
 
     % Axes and labels
     ax1 = gca;
-    box(ax1,'off');
+    box(ax1,'on');
     set(ax1,'FontSize',14,...
         'TickDir','out',...
         'YMinorTick','off',...
@@ -203,7 +203,8 @@ if ismember(1,view) || ismember(1,output)
     % datetick('x','dd mmm yyyy','keepticks','keeplimits')
 
     % Legend
-    legend1 = legend(ax1,'show',...
+    legend1 = legend(ax1,'show');
+    set(legend1,...
         'Location','North',...
         'Box','on',...
         'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
@@ -237,7 +238,7 @@ if ismember(2,view) || ismember(1,output)
     
     p2_1 = plot(allDates_H,Air_Temp1_H,...
         'DisplayName','Measured Air Temp',...
-        'Color',[0.729411764705882 0.831372549019608 0.956862745098039 0.8],...         % [R G B Alpha]
+        'Color',[0.933333337306976 0.764705896377563 0.505882382392883],...                         % [R G B Alpha]
         'LineStyle','-',...
         'LineWidth',1);
     hold on
@@ -293,9 +294,9 @@ if ismember(2,view) || ismember(1,output)
 
     % Adjust figure
     pos_2 = get(ax2, 'Position');                            	% Current position
-    pos_2(1) = 0.05;                                           	% Shift Plot horizontally
+    pos_2(1) = 0.08;                                           	% Shift Plot horizontally
     pos_2(2) = pos_2(2) - 0.02;                                	% Shift Plot vertically
-    pos_2(3) = pos_2(3)*1.175;                               	% Scale plot horizontally
+    pos_2(3) = pos_2(3)*1.16;                               	% Scale plot horizontally
     pos_2(4) = pos_2(4)*1.05;                                	% Scale plot vertically
     set(ax2, 'Position', pos_2)
     hold off
