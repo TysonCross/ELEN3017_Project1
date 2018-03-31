@@ -1,7 +1,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = [1 2 3 4 5];
-output  = [1 2 3 4 5 ];
+view    = [1 2 3 4]; % [1 2 3 4 5]
+output  = [1 2 3 4];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -113,7 +113,7 @@ rawNumericColumns1(R1) = {NaN}; % Replace non-numeric cells
 i=1;
 for j=1:2:m-1
     str = raw_time{1,j};
-    Time{1,i} = str(3:end-3);
+    time_day{1,i} = str(3:end-3);
     raw_elevation(:,i) = [raw_sundata{:,j}]';
     raw_azimuth(:,i)   = [raw_sundata{:,j+1}]';
     i = i+1;
@@ -124,7 +124,7 @@ raw_date = reshape([raw_date{:}],size(raw_date));
 DateYear = raw_date;
 dateMonth = datetime(DateYear,'ConvertFrom','excel','Format','MMMM');
 dateMonthDay = datetime(DateYear,'ConvertFrom','excel','Format','MMMM dd');
-time = datetime(Time,'InputFormat','HH:mm','Format','HH:mm');
+time = datetime(time_day,'InputFormat','HH:mm','Format','HH:mm');
 for i=1:length(dateMonthDay)
     DateLookup{i} = {dateMonthDay(i), datenum(dateMonthDay(i))};
 end
@@ -164,7 +164,7 @@ end
 %% Zenith
 i=1;
 for j=sort([5 6 7 8 9 10 11 12])  % from 6am to 12pm
-    TimeZenith{1,i} = Time{1,(j*6)+1};
+    TimeZenith{1,i} = time_day{1,(j*6)+1};
     SunZenithYear(:,i) = raw_elevation(:,(j*6));    % Time columns in increments of 10 min
 	i = i + 1;
 end
@@ -228,7 +228,7 @@ assert( (GHI_Total - GHI_Monthly_Total ) ./ GHI_Total .*100 < tol );
 assert( (DNI_Total - DNI_Monthly_Total ) ./ DNI_Total .*100 < tol );
 assert( (DHI_Total - DHI_Monthly_Total ) ./ DHI_Total .*100 < tol );
 
-%% Tilt Angle
+%% Tilt Angle (and output to display)
 
 % Weighting
 for i=1:12
@@ -254,14 +254,23 @@ for i=1:12
     TiltAverageWeighted = TiltAverageWeighted + mult;
 end
 
-disp('Finished Output Variable preparation');
+% output
+Max_tilt_angle = max(TiltOptimal);
+Min_tilt_angle = min(TiltOptimal);
+Tilt_variation = abs(Max_tilt_angle-Min_tilt_angle);
+disp(['Maximum optimal tilt angle: ',num2str(round(Max_tilt_angle,2)),'°'])
+disp(['Mimimum optimal tilt angle: ',num2str(round(Min_tilt_angle,2)),'°'])
+disp(['Annual tilt variation: ',num2str(round(Tilt_variation,2)),'°'])
+disp(['Optimal tilt angle (mean): ',num2str(round(TiltAverage,2)),'°'])
+disp(['Optimal tilt angle (weighted): ',num2str(round(TiltAverageWeighted,2)),'°'])
+disp(' ')
+disp('---------------------')
 
 %% Clear temporary variables
 clearvars raw_sundata raw_azimuth raw_elevation raw_time raw_date R i j k str;
 clearvars SunElevationDay_temp SunAzimuthDay_temp;
 clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr;
 clearvars result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns R;
-disp('Cleared temp variables');
 
 %% Display setting and output setup
 scr = get(groot,'ScreenSize');                              % screen resolution
@@ -296,7 +305,7 @@ if ismember(1,view) || ismember(1,output)
         'YMinorTick','on',...
         'XMinorTick','on',...
         'FontName',fontName,...
-        'Box','on',...
+        'Box','off',...
         'XTick',[-180:30:180],...
         'Xlim',[-180 180],...
         'Ylim',[0 90]);
@@ -374,16 +383,20 @@ if ismember(2,view) || ismember(2,output)
     set(ax2,...
         'FontSize',14,...
         'FontName',fontName,...
-        'Box','on',...
+        'Box','off',...
         'XMinorTick','on',...
         'YMinorTick','on',...
-        'XTick',...
-        [737149.125:0.125:737149.875],...
-        'Xlim',[737149.125 737149.875],...
-        'XTickLabel',...
-        {'03:00','06:00','09:00','12:00','15:00','18:00','21:00'},...
+        'XTick',datenum([time(1)+hours(4):hours(1):time(end)-hours(3)]),...
+        'Xlim',datenum([time(1)+hours(4) time(end)-hours(3)]),...
+        'XTickLabel',datestr([time(1)+hours(4):hours(3):time(end)-hours(3)]),...
         'YTick',[-180:30:180],...
         'Ylim',[-180 180]);
+        datetick('x','hh:00','keeplimits')
+
+        %'XTick',[737149.125:0.125:737149.875]
+        %'Xlim',[737149.125 737149.875]
+        %'XTickLabel',{'03:00','06:00','09:00','12:00','15:00','18:00','21:00'}
+
     ylabel(ax2,...
         'Solar Azimuth Angle');
     xlabel(ax2,...
@@ -433,7 +446,7 @@ if ismember(3,view) || ismember(3,output)
     set(ax3,...
         'FontSize',14,...
         'FontName',fontName,...
-        'Box','on',...
+        'Box','off',...
         'XMinorTick','off',...
         'YMinorTick','on',...
         'XGrid','off',...
@@ -482,7 +495,7 @@ if ismember(4,view) || ismember(4,output)
     set(ax4,...
         'FontSize',14,...
         'FontName',fontName,...
-        'Box','on',...
+        'Box','off',...
         'XMinorTick','off',...
         'YMinorTick','on',...
         'XGrid','off',...
@@ -553,7 +566,7 @@ if ismember(5,view) || ismember(5,output)
     set(ax5,...
         'FontSize',14,...
         'FontName',fontName,...
-        'Box','on',...
+        'Box','off',...
         'XMinorTick','off',...
         'YMinorTick','on',...
         'XGrid','off',...
@@ -593,23 +606,23 @@ if ismember(5,view) || ismember(5,output)
 end
 
 %% Output
-if ismember(1,view)
+if ismember(1,view) || ismember(1,output)
     set(fig1, 'Visible', 'on');
     WinOnTop( fig1, true );
 end
-if ismember(2,view)
+if ismember(2,view) || ismember(2,output)
     set(fig2, 'Visible', 'on');
     WinOnTop( fig2, true );
 end
-if ismember(3,view)
+if ismember(3,view) || ismember(3,output)
     set(fig3, 'Visible', 'on');
     WinOnTop( fig3, true );
 end
-if ismember(4,view)
+if ismember(4,view) || ismember(4,output)
     set(fig4, 'Visible', 'on');
     WinOnTop( fig4, true );
 end
-if ismember(5,view)
+if ismember(5,view) || ismember(5,output)
     set(fig5, 'Visible', 'on');
     WinOnTop( fig5, true );
 end

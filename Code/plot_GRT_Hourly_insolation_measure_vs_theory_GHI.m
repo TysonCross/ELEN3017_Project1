@@ -1,6 +1,7 @@
+% Annual Measured vs Theoretical GHI, Graaf-Reinet (Hourly)
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [];
+view    = [1]; % [1]
 output  = [];
 
 %% Data for GRT 1/1/14-1/1/15
@@ -154,7 +155,6 @@ GHI_CMP1(existingDates) = cell2mat(rawNumericColumns1(:, 1));
 % RH1(existingDates) = cell2mat(rawNumericColumns1(:, 6));
 % Rain_Tot1(existingDates) = cell2mat(rawNumericColumns1(:, 7));
 
-
 %% Azimuth and Elevation
 % i=1;
 % for j=1:length(raw_elevation)
@@ -176,8 +176,8 @@ SunZenithYear(R1) = (0); % Replace non-numeric cells
 SunZenithYear = 90 - SunZenithYear;
 
 % Theoretical Estimates (from solar plot)
-DNI_estimate = 1000; % max(DNI_CHP1)*1.1;
-GHI_Theoretical =  DNI_estimate*cos(deg2rad((SunZenithYear)));
+GHI_estimate = max(GHI_CMP1);
+GHI_Theoretical =  GHI_estimate*cos(deg2rad((SunZenithYear)));
 
 width1 = length(GHI_CMP1);
 order1 = floor( log10(max(GHI_CMP1)));
@@ -209,7 +209,7 @@ set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
 set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
 
-%% Draw plots
+%% Fig1 - Measured GHI, Graaf-Reinet
 if ismember(1,view) || ismember(1,output)
     p1_1 = plot(allDates,GHI_CMP1,...
         'DisplayName','Measured GHI, Graaf-Reinet',...
@@ -271,7 +271,7 @@ if ismember(1,view) || ismember(1,output)
 end
 
 %% Output
-if ismember(1,view)
+if ismember(1,view) || ismember(1,output)
     set(fig_grt, 'Visible', 'on');
     WinOnTop( fig_grt, true );
 end

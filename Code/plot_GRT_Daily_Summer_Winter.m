@@ -1,9 +1,9 @@
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
 view    = [1];
-output  = [1];
+output  = [];
 
-%% Data for GRT 21st June (2014/2015)
+%% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
 Longitude = 24.58582;
 Elevation = 660; % metres
@@ -25,6 +25,16 @@ GHI_Max_Jun = max(max(GHI_CMP11_Jun_2014),max(GHI_CMP11_Jun_2015));
 
 Solar_range_Max_Delta = abs(GHI_Max_Dec-GHI_Max_Jun);
 Solar_range_Absolute = GHI_Max_Dec;
+
+Total_insolation_Dec = max(cumtrapz(GHI_CMP11_Dec_2014));
+Total_insolation_Jun = max(cumtrapz(GHI_CMP11_Jun_2014));
+
+disp(['Typical total daily solar insolation for winter solstice: ', num2str(round(Total_insolation_Jun)), ' W/m^2'])
+disp(['Typical total daily solar insolation for summer solstice: ', num2str(round(Total_insolation_Dec)), ' W/m^2'])
+disp(['Typical maximum solar insolation peak at 12:00 on 21 December: ', num2str(round(GHI_Max_Dec)), ' W/m^2'])
+disp(['Typical maximum solar insolation peak at 12:00 on 21 June: ', num2str(round(GHI_Max_Jun)), ' W/m^2'])
+disp(' ')
+
 
 %% Dates
 [~,commonDates_Jun,~] = intersect(datenum(Date_2014),datenum(Date_2015));
@@ -169,7 +179,7 @@ if ismember(1,view) || ismember(1,output)
 end
 
 %% Output
-if ismember(1,view)
+if ismember(1,view) || ismember(1,output)
     set(fig_grt, 'Visible', 'on');
     WinOnTop( fig_grt, true );
 end

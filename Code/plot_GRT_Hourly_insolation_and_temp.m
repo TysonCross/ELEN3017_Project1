@@ -1,6 +1,7 @@
+% GRT Global Irradiance Average & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1 2];
+view    = [1 2]; % [1 2]
 output  = [];
 
 %% Initialize variables.
@@ -112,11 +113,24 @@ Air_Temp1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 4));
 % RH1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 6));
 % Rain_Tot1_H(existingDates_H) = cell2mat(rawNumericColumns1_H(:, 7));
 
+%% Date Indices
 DateMonthIndex = [735600 735631 735659 735690 735720 735751 735781 735812 735843 735873 735904 735934];
 DateMonthLimit = [735600 735965];
 DateMonthLabel = {'                  Jan','                  Feb','                  Mar','                  Apr',...
                   '                  May','                  Jun','                  Jul','                  Aug',...
                   '                  Sep','                  Oct','                  Nov','                  Dec'};
+
+%% Calculations
+Max_air_temp = max(Air_Temp1_H);
+Min_air_temp = min(Air_Temp1_H);
+Temperature_variation = abs(Max_air_temp-Min_air_temp);
+Average_air_temp = mean(Air_Temp1_H,'omitnan');
+
+disp(['Maximum air temperature: ',num2str(round(Max_air_temp,2)),'°C'])
+disp(['Minimum air temperature: ',num2str(round(Min_air_temp,2)),'°C'])
+disp(['Maximum annual variation in air temperature: ',num2str(round(Temperature_variation,2)),'°C'])
+disp(['Average annual air temperature: ',num2str(round(Average_air_temp,2)),'°C'])
+disp(' ')
 
 %% Curve estimate
 width1 = length(GHI_CMP1_H);
@@ -130,9 +144,6 @@ freq1 = pi/period1;
 offset1 = 0.99;
 max_height = max(GHI_CMP1_H);
 sine1 = 1.28/sqrt(2^5)*max_height*sin(t1*freq1 + offset1) + 730;
-
-
-Average_air_temp = mean(Air_Temp1_H,'omitnan');
 
 %% Fit: 'Fourier Fit'.
 [xData, yData] = prepareCurveData( DateNum_H, Air_Temp1_H );
@@ -159,7 +170,6 @@ set(0,'defaultAxesFontName', fontName);                         % Make fonts pre
 set(0,'defaultTextFontName', fontName);
 set(groot,'FixedWidthFontName', 'ElroNet Monospace')            % replace with your system's monospaced font
 
-%% Draw plots
 %% Fig 1 - Global Horizontal Irradiance Average (Hourly)
 if ismember(1,view) || ismember(1,output)
     fig_1 = figure('Position',...                            	% draw figure
@@ -189,7 +199,7 @@ if ismember(1,view) || ismember(1,output)
 
     % Axes and labels
     ax1 = gca;
-    box(ax1,'on');
+    box(ax1,'off');
     set(ax1,'FontSize',14,...
         'TickDir','out',...
         'YMinorTick','off',...
@@ -206,8 +216,8 @@ if ismember(1,view) || ismember(1,output)
     legend1 = legend(ax1,'show');
     set(legend1,...
         'Location','North',...
-        'Box','on',...
-        'Position',[0.408861442020507 0.721338004606258 0.170925025013643 0.17304951684997],...
+        'Box','off',...
+        'Position',[0.401567265013978 0.784686488453122 0.193618460538053 0.0666553310498579],...
         'EdgeColor',[1 1 1]);
 %     legend1.PlotChildren = legend1.PlotChildren([1 2]);
     hold on
@@ -234,7 +244,7 @@ if ismember(2,view) || ismember(1,output)
         'Color','white');
     ax2 = gca;
     hold(ax2,'on');
-    box(ax2,'on');
+    box(ax2,'off');
     
     p2_1 = plot(allDates_H,Air_Temp1_H,...
         'DisplayName','Measured Air Temp',...
