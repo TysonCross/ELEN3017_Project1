@@ -1,7 +1,7 @@
 % GRT Expected Power output & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1]; % [1 2]
+view    = [1 3]; % [1 2 3]
 output  = [];
 
 %% Data for GRT 1/1/14-1/1/15
@@ -173,30 +173,23 @@ max_height = max(GHI_CMP1_H);
 % clear j;
 
 variable_AngleVariables; % Load calculated values
-TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_summer,Tilt_angle_winter];
-Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)))*1000;
-
-L = deg2rad(Latitude);
-d = deg2rad(DeclinationAngle);
-B = deg2rad(TiltAngles);
-alpha = deg2rad(90 - SunZenithAngle);
-phi = deg2rad(SunZenithAngle);
-for i=1:numel(B)
-Incidence_angle(:,i) = acos(...
-    sin(L).*sin(d).*cos(B(i))...
-    - cos(L).*sin(d).*sin(B(i))...
-    + cos(L).*cos(d).*cos(B(i))...
-    + sin(L).*cos(d).*sin(B(i)));
-    irradiance_ratio1(:,i) = cos(deg2rad(Incidence_angle(:,i)))./cos(phi');
-    Max_power1(:,i) = Daily_max_irradiance.*irradiance_ratio1(i);
-end
-
-% irradiance_ratio2 = cos(deg2rad(Latitude))./cos(deg2rad(SunZenithAngle));
-% Max_power2 = (irradiance_ratio2').*Daily_max_irradiance;
+TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_summer,Tilt_angle_winter,0.0];
+Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)));
 
 for i=1:numel(TiltAngles)
-   irradiance_ratio3(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))./cos(deg2rad(-Latitude+DeclinationAngle)));
-   Max_power3(:,i) = Daily_max_irradiance./irradiance_ratio3(i);
+   irradiance_ratio(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))...
+       ./cos(deg2rad(-Latitude+DeclinationAngle)));
+    Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
+    Energy_tilt_totals(:,i) = cumtrapz(Max_solar_power(:,i));
+end
+
+[n m] = size(Energy_tilt_totals);
+labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
+        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
+disp('Total irradiance on tilted surface:')
+for i=1:m
+    disp([labels{i},' at ',num2str(TiltAngles(i)),...
+        '° is ', num2str(Energy_tilt_totals(end,i)) , ' W/m^2' ])
 end
 
 %% Fit: 'Fourier Fit'. (temperature)
@@ -233,20 +226,13 @@ if ismember(1,view) || ismember(1,output)
         'numbertitle','on',...                                  % Give figure useful title
         'name','Global Horizontal Irradiance Average (Hourly)',...
         'Color','white');
-
-    p1_1 = plot(DateDayIndex,Daily_max_irradiance,...
-        'DisplayName','Maximum surface radiance',...
-        'Color',[0.9 0.18 0.18 .6],...                 
-        'LineStyle','-',...
-        'LineWidth',6);
-    hold on
     
-    [n m] = size(Max_power3);
-    labels = {'Tilt angle optimal (weighted)','Tilt angle optimal (mean)',...
-        'Tilt angle (summer)','Tilt angle (winter)'};
+    [n m] = size(irradiance_ratio);
+    labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
+        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
     for i=1:m
         plot_num = strcat('p1_',num2str(i+1));
-        variable.(plot_num) = plot(DateDayIndex,Max_power3(:,i),...
+        variable.(plot_num) = plot(DateDayIndex,irradiance_ratio(:,i),...
         'DisplayName',labels{i},...
         'LineStyle','-',...
         'LineWidth',2);
@@ -255,18 +241,17 @@ if ismember(1,view) || ismember(1,output)
     
     % Axes and labels
     ax1 = gca;
-%     set(ax1,...
-%         'Box','off',...
-%         'FontSize',14,...
-%         'TickDir','out',...
-%         'YMinorTick','off',...
-%         'XMinorTick','off',...
-%         'XTick',DateMonthIndex,...
-%         'Xlim',DateMonthLimit,...
-%         'XTickLabel',DateMonthLabel,...
-%         'Ylim',[0 1200],...
-%         'FontName',fontName);
-    ylabel(ax1,'Global Insolation \rightarrow');
+    set(ax1,...
+        'Box','off',...
+        'FontSize',14,...
+        'YMinorTick','off',...
+        'XMinorTick','off',...
+        'XTick',DateMonthIndex,...
+        'Xlim',DateMonthLimit,...
+        'XTickLabel',DateMonthLabel,...
+        'Ylim',[0.6 1.8],...
+        'FontName',fontName);
+    ylabel(ax1,'Irradiance Ratios');
     xlabel(ax1,'Date \rightarrow');
     datetick(ax1,'x','dd mmm yyyy','keepticks','keeplimits')
     
@@ -372,14 +357,80 @@ if ismember(2,view) || ismember(1,output)
     disp('Finished plotting Figure 2...')
 end
 
+%% Fig 3 - Global Horizontal Irradiance Average (Hourly)
+if ismember(3,view) || ismember(3,output)
+    
+    fig_3 = figure('Position',...                            	% draw figure
+        [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
+        'Visible', 'off',...
+        'numbertitle','on',...                                  % Give figure useful title
+        'name','Effect of tilt angle on irradiance collection',...
+        'Color','white');
+
+    [n m] = size(Max_solar_power);
+    labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
+        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
+    for i=1:m
+        plot_num = strcat('p1_',num2str(i+1));
+        variable.(plot_num) = plot(DateDayIndex,Max_solar_power(:,i),...
+        'DisplayName',labels{i},...
+        'LineStyle','-',...
+        'LineWidth',2);
+        hold on
+    end
+    
+    % Axes and labels
+    ax3 = gca;
+    set(ax3,...
+        'Box','off',...
+        'FontSize',14,...
+        'TickDir','out',...
+        'YMinorTick','off',...
+        'XMinorTick','off',...
+        'XTick',DateMonthIndex,...
+        'Xlim',DateMonthLimit,...
+        'XTickLabel',DateMonthLabel,...
+        'Ylim',[0 1200],...
+        'FontName',fontName);
+    ylabel(ax3,'Solar Irradiance');
+    xlabel(ax3,'Date \rightarrow');
+    datetick(ax3,'x','dd mmm yyyy','keepticks','keeplimits')
+    
+    % Legend
+    legend3 = legend(ax3,'show');
+%         {'Maximum surface radiance','Tilt angle optimal (weighted)',...
+%         'Tilt angle optimal (mean)','Tilt angle (summer)','Tilt angle (winter)'});
+    set(legend3,...
+        'Box','off',...
+        'Position',[0.401567265013978 0.784686488453122 0.193618460538053 0.0666553310498579],...
+        'EdgeColor',[1 1 1]);
+%     legend3.PlotChildren = legend3.PlotChildren([1 2]);
+    hold on
+
+    % Adjust figure
+    pos_3 = get(ax3, 'Position');                                 % Current position
+    pos_3(1) = 0.07;                                              % Shift Plot horizontally
+    pos_3(2) = pos_3(2) - 0.02;                                     % Shift Plot vertically
+    pos_3(3) = pos_3(3)*1.175;                                      % Scale plot horizontally
+    pos_3(4) = pos_3(4)*1.05;                                        % Scale plot vertically
+    set(ax3, 'Position', pos_3)
+    hold off
+    
+    disp('Finished plotting Figure 3...')
+end
+
 %% Output
-if ismember(1,view)
+if ismember(1,view) || ismember(1,output)
     set(fig_1, 'Visible', 'on');
     WinOnTop( fig_1, true );
 end
-if ismember(2,view)
+if ismember(2,view) || ismember(2,output)
     set(fig_2, 'Visible', 'on');
     WinOnTop( fig_2, true );
+end
+if ismember(3,view) || ismember(3,output)
+    set(fig_3, 'Visible', 'on');
+    WinOnTop( fig_3, true );
 end
 if sum(view)<1
     disp('Image view disabled')
@@ -388,7 +439,7 @@ if sum(output)>0
 	disp('Exporting images... please wait')
 end
 if ismember(1,output)
-	export_fig ('../Report/images/GHI_Hourly_Measurements_Average.eps',fig_1)
+	export_fig ('../Report/images/Comparison_of_irradiance_ratios.eps',fig_1)
     disp('Exported Figure')
     close(fig_1);
 end
@@ -396,6 +447,11 @@ if ismember(2,output)
 	export_fig ('../Report/images/Air_Temp_Average.eps',fig_2)
     disp('Exported Figure')
     close(fig_2);
+end
+if ismember(3,output)
+	export_fig ('../Report/images/Effect_of_tilt_angle_on_insolation.eps',fig_3)
+    disp('Exported Figure')
+    close(fig_3);
 end
 if sum(output)<1
 	disp('Image export disabled')
