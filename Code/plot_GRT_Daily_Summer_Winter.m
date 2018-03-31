@@ -1,7 +1,7 @@
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
 view    = [1];
-output  = [];
+output  = [1];
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;

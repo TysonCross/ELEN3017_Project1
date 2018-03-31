@@ -1,7 +1,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = [1 2 3 4]; % [1 2 3 4 5]
-output  = [1 2 3 4];
+view    = [1 2 3 4 5]; % [1 2 3 4 5]
+output  = [1 2 3 4 5];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -155,22 +155,31 @@ Rain_Tot1(existingDates) = cell2mat(rawNumericColumns1(:, 7));
 %% Azimuth and Elevation
 i=1;
 for j=1:length(raw_elevation)
-    SunElevationYearMax(j,:) = max(raw_elevation(j,:));
+    SunElevationYearMax(:,j) = max(raw_elevation(j,:));
     SunAzimuthYear_min = deg2rad(min(raw_azimuth(j,:)));
-    SunAzimuthYearMin(j,:) = rad2deg(unwrap(SunAzimuthYear_min));
+    SunAzimuthYearMin(:,j) = rad2deg(unwrap(SunAzimuthYear_min));
     i = i + 1;
 end
 
+%% Declination Angle
+date_days = [1:366];
+d_angle = 360./365.*date_days + 284;
+DeclinationAngle = -23.45 * sin(degtorad(d_angle)); % Negative in Southern Hemisphere
+
 %% Zenith
 i=1;
-for j=sort([5 6 7 8 9 10 11 12])  % from 6am to 12pm
+for j=sort([5 6 7 8 9 10 11 12])  % from 5am to 12pm, each hour
     TimeZenith{1,i} = time_day{1,(j*6)+1};
-    SunZenithYear(:,i) = raw_elevation(:,(j*6));    % Time columns in increments of 10 min
+    SunElevationYear(:,i) = raw_elevation(:,(j*6));    % Time columns in increments of 10 min
 	i = i + 1;
 end
-R1 = arrayfun(@(x) (~isnumeric(x) && ~islogical(x)) || isnan(x),SunZenithYear); % Find non-numeric cells
-SunZenithYear(R1) = (0); % Replace non-numeric cells
-SunZenithYear = 90 - SunZenithYear;
+R1 = arrayfun(@(x) (~isnumeric(x) && ~islogical(x)) || isnan(x),SunElevationYear); % Find non-numeric cells
+SunElevationYear(R1) = (0); % Replace non-numeric cells
+MinimumElevation = 0;
+SunElevationYear(SunElevationYear<MinimumElevation) = MinimumElevation; % 0 is lowest angle
+SunZenithYear = 90 - SunElevationYear;
+SunZenithAngleSimple = 90 - abs(-Latitude+DeclinationAngle); % rough calculation
+SunZenithAngle = SunZenithYear(:,end); % At noon.
 
 %% Theoretical Estimates (from solar plot)
 DNI_estimate = 1000; %max(DNI_CHP1)*1.1;
@@ -236,33 +245,37 @@ for i=1:12
 end
 assert(sum(GHI_Weighting,'omitnan') - 1.0 < tol);
 
-date_days = [1:366];
-d_angle = degtorad(360./365.*date_days + 284);
-DeclinationAngle = -23.45 * sin(d_angle);
-TiltOptimal = -(Latitude-DeclinationAngle);
-TiltAverage = mean(TiltOptimal);
+Tilt_angle_optimal = SunZenithAngle; % Matching the sun's elevation at noon
+Tilt_angle_optimal_mean = mean(Tilt_angle_optimal);
+
+% for i=1:numel(DateMonthIndex)-1
+%     offset_index = DateMonthIndex(1);
+%     index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
+%     DeclinationAngleMonthlyAverage(i) = mean(DeclinationAngle(index),'omitnan');
+% end
 
 for i=1:numel(DateMonthIndex)-1
     offset_index = DateMonthIndex(1);
     index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
-    DeclinationAngleMonthlyAverage(i) = mean(DeclinationAngle(index),'omitnan');
+    Tilt_angle_monthly_mean(:,i) = mean(Tilt_angle_optimal(index),'omitnan');
 end
 
-TiltAverageWeighted = 0;
+Tilt_angle_optimal_weighted = 0;
 for i=1:12
-    mult = -(Latitude-DeclinationAngleMonthlyAverage(i)).*GHI_Weighting(i);
-    TiltAverageWeighted = TiltAverageWeighted + mult;
+%     mult = abs(-Latitude+TiltAngleMonthlyAverage(i)).*GHI_Weighting(i);
+    mult = abs(Tilt_angle_monthly_mean(i)).*GHI_Weighting(i);
+    Tilt_angle_optimal_weighted = Tilt_angle_optimal_weighted + mult;
 end
 
 % output
-Max_tilt_angle = max(TiltOptimal);
-Min_tilt_angle = min(TiltOptimal);
-Tilt_variation = abs(Max_tilt_angle-Min_tilt_angle);
-disp(['Maximum optimal tilt angle: ',num2str(round(Max_tilt_angle,2)),'°'])
-disp(['Mimimum optimal tilt angle: ',num2str(round(Min_tilt_angle,2)),'°'])
-disp(['Annual tilt variation: ',num2str(round(Tilt_variation,2)),'°'])
-disp(['Optimal tilt angle (mean): ',num2str(round(TiltAverage,2)),'°'])
-disp(['Optimal tilt angle (weighted): ',num2str(round(TiltAverageWeighted,2)),'°'])
+Tilt_angle_max = max(Tilt_angle_optimal);
+Tilt_angle_min = min(Tilt_angle_optimal);
+Tilt_angle_variation = abs(Tilt_angle_max-Tilt_angle_min);
+disp(['Maximum optimal tilt angle (Winter): ',num2str(round(Tilt_angle_max,2)),'°'])
+disp(['Mimimum optimal tilt angle (SUmmer): ',num2str(round(Tilt_angle_min,2)),'°'])
+disp(['Annual tilt variation: ',num2str(round(Tilt_angle_variation,2)),'°'])
+disp(['Optimal tilt angle (mean): ',num2str(round(Tilt_angle_optimal_mean,2)),'°'])
+disp(['Optimal tilt angle (weighted): ',num2str(round(Tilt_angle_optimal_weighted,2)),'°'])
 disp(' ')
 disp('---------------------')
 
@@ -482,10 +495,12 @@ if ismember(4,view) || ismember(4,output)
             'Color','white');
 
     % plot
+    linS = {'-','--',':','-.'};
     [n m] = size(SunZenithYear);
     for i=1:m
         plot_num = strcat('p4_',num2str(i));
         variable.(plot_num) = plot(dateMonthDay,SunZenithYear(:,i),...
+        'Linestyle',linS{mod(i,numel(linS))+1},...
         'LineWidth',2);
         hold on
     end
@@ -502,7 +517,7 @@ if ismember(4,view) || ismember(4,output)
         'XTick',DateMonthIndex(1:end-1),...
         'Xlim',DateMonthLimit,...
         'XTickLabel',DateMonthLabel,...
-        'YTick',[0:30:100],...
+        'YTick',[0:10:100],...
         'Ylim',[0 100]);
     ylabel(ax4,...
         'Solar Zenith Angle (deg)');
@@ -546,21 +561,39 @@ if ismember(5,view) || ismember(5,output)
             'Color','white');
 
     % plot
-    p5_1 = plot(dateMonthDay,TiltOptimal,...
+    p5_1 = plot(dateMonthDay,Tilt_angle_optimal,...
+        'DisplayName','Optimal tilt angle',...
         'Color',[0.9 0.18 0.18 .6],...                          % [R G B Alpha]
         'LineStyle','-',...
         'LineWidth',2);
     hold on
-    p5_2 = refline(0,TiltAverage);
-    set(p5_2,'Color',[0.18 0.18 0.9 .6],...                 
-            'LineStyle','-',...
-            'LineWidth',2);
+    p5_2 = refline(0,Tilt_angle_optimal_mean);
+    set(p5_2,'DisplayName','Average tilt angle',...
+        'Color',[0.18 0.18 0.9 .6],...                 
+        'LineStyle','-',...
+        'LineWidth',2);
     hold on
-    p5_2 = refline(0,TiltAverageWeighted);
-    set(p5_2,'Color',[0.18 0.9 0.18 .6],...                 
-            'LineStyle','-',...
-            'LineWidth',2);
+    p5_2 = refline(0,Tilt_angle_optimal_weighted);
+    set(p5_2,'DisplayName','Weighted average tilt angle',...
+        'Color',[0.18 0.9 0.18 .6],...                 
+        'LineStyle','-',...
+        'LineWidth',2);
     hold on
+    
+    p5_3 = refline(0,Tilt_angle_max);
+    set(p5_3,'DisplayName','Maximum tilt angle',...
+        'Color',[0.301960796117783 0.745098054409027 0.933333337306976],...                 
+        'LineStyle',':',...
+        'LineWidth',2);
+    hold on
+    
+    p5_4 = refline(0,Tilt_angle_min);
+    set(p5_4,'DisplayName','Minimum tilt angle',...
+        'Color',[0.494117647409439 0.184313729405403 0.556862771511078],...                 
+        'LineStyle',':',...
+        'LineWidth',2);
+    hold on
+    
     % Axis
     ax5 = gca;
     set(ax5,...
@@ -573,7 +606,7 @@ if ismember(5,view) || ismember(5,output)
         'XTick',DateMonthIndex(1:end-1),...
         'Xlim',DateMonthLimit,...
         'XTickLabel',DateMonthLabel,...
-        'YTick',sort([0:6:60 TiltAverage TiltAverageWeighted]),...
+        'YTick',sort([0:6:60 Tilt_angle_optimal_mean Tilt_angle_optimal_weighted Tilt_angle_max Tilt_angle_min]),...
         'Ylim',[0 60]);
     ylabel(ax5,...
         'Tilt Angle (deg)');
@@ -584,13 +617,12 @@ if ismember(5,view) || ismember(5,output)
     % ax5.YAxis.TickLabelFormat = '%,.1f';
     yt=get(ax5,'ytick');
     for k=1:numel(yt);
-    yt5{k}=sprintf('%.2f°',yt(k));
+    yt5{k}=sprintf('%.1f°',yt(k));
     end
     set(ax5,'yticklabel',yt5);
-    legend5 = legend(ax5,...
-        {'Optimal Tilt Angle','Average Tilt Angle','Weighted Average Tilt Angle'},...
-        'Position',[0.675287904014671 0.255631189606246 0.19216994337692 0.0782],...
-        'Location','best',...
+    legend5 = legend(ax5,'show');
+	set(legend5,...
+        'Position',[0.760867296837495 0.700843261637406 0.18637587473239 0.125151882721854],...
         'EdgeColor',[1 1 1],...
         'Box','off');
 
@@ -606,6 +638,30 @@ if ismember(5,view) || ismember(5,output)
 end
 
 %% Output
+
+% Write Variables to file
+outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_AngleVariables.m';
+fid = fopen(outfile, 'wt');
+fprintf(fid, '%s\n','% Calculated in plot_GRT_Annual_SolarPath_angles.m');
+fprintf(fid, 'Tilt_angle_optimal = [');
+fprintf(fid, '%f,',Tilt_angle_optimal(1:end-1));
+fprintf(fid, '%f];\n',Tilt_angle_optimal(end));
+fprintf(fid, 'Tilt_angle_max = %f;\n',Tilt_angle_max);
+fprintf(fid, 'Tilt_angle_min = %f;\n',Tilt_angle_min);
+fprintf(fid, 'Tilt_angle_optimal_mean = %f;\n',Tilt_angle_optimal_mean);
+fprintf(fid, 'Tilt_angle_optimal_weighted = %f;\n',Tilt_angle_optimal_weighted);
+fprintf(fid, 'SunZenithAngleSimple = [');
+fprintf(fid, '%f,',SunZenithAngleSimple(1:end-1));
+fprintf(fid, '%f];\n',SunZenithAngleSimple(end));
+fprintf(fid, 'SunZenithAngle = [');
+fprintf(fid, '%f,',SunZenithAngle(1:end-1));
+fprintf(fid, '%f];\n',SunZenithAngle(end));
+fprintf(fid, 'DeclinationAngle = [');
+fprintf(fid, '%f,',DeclinationAngle(1:end-1));
+fprintf(fid, '%f];\n',DeclinationAngle(end));
+fclose(fid);
+disp('Variables written to file:/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_AngleVariables.m') 
+
 if ismember(1,view) || ismember(1,output)
     set(fig1, 'Visible', 'on');
     WinOnTop( fig1, true );
