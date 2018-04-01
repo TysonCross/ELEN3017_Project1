@@ -257,13 +257,20 @@ Tilt_angle_optimal_mean = mean(Tilt_angle_optimal);
 for i=1:numel(DateMonthIndex)-1
     offset_index = DateMonthIndex(1);
     index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
-    Tilt_angle_monthly_mean(:,i) = mean(Tilt_angle_optimal(index),'omitnan');
+    SunZenithAngleMonthlyMean(:,i) = mean(SunZenithAngle(index),'omitnan');
 end
+
+% for i=1:numel(DateMonthIndex)-1
+%     offset_index = DateMonthIndex(1);
+%     index = [DateMonthIndex(i)-offset_index+1:DateMonthIndex(i+1)-offset_index];
+%     Tilt_angle_monthly_mean(:,i) = mean(Tilt_angle_optimal(index),'omitnan');
+% end
 
 Tilt_angle_optimal_weighted = 0;
 for i=1:12
-%     mult = abs(-Latitude+TiltAngleMonthlyAverage(i)).*GHI_Weighting(i);
-    mult = abs(Tilt_angle_monthly_mean(i)).*GHI_Weighting(i);
+%     mult = abs(-Latitude+DeclinationAngleMonthlyAverage(i)).*GHI_Weighting(i);
+    mult = abs(SunZenithAngleMonthlyMean(i)).*GHI_Weighting(i);
+% 	mult = abs(Tilt_angle_monthly_mean(i)).*GHI_Weighting(i);
     Tilt_angle_optimal_weighted = Tilt_angle_optimal_weighted + mult;
 end
 

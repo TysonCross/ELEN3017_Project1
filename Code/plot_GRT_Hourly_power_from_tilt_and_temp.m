@@ -1,8 +1,8 @@
 % GRT Expected Power output & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1 3]; % [1 2 3]
-output  = [];
+view    = [1 2 3]; % [1 2 3]
+output  = [1 2 3];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -140,17 +140,11 @@ Min_air_temp = min(Air_Temp1_H);
 Temperature_variation = abs(Max_air_temp-Min_air_temp);
 Average_air_temp = mean(Air_Temp1_H,'omitnan');
 
-disp(['Maximum air temperature: ',num2str(round(Max_air_temp,2)),'°C'])
-disp(['Minimum air temperature: ',num2str(round(Min_air_temp,2)),'°C'])
-disp(['Maximum annual variation in air temperature: ',num2str(round(Temperature_variation,2)),'°C'])
-disp(['Average annual air temperature: ',num2str(round(Average_air_temp,2)),'°C'])
-disp(' ')
-
-% Calculated in plot_GRT_Annual_SolarPath_angles.m
-Tilt_angle_summer = 55.9353; % (Noon on 21 June)
-Tilt_angle_winter = 9.0829; % (Noon on 21 June)
-Tilt_angle_optimal_mean = 32.5474;
-Tilt_angle_optimal_weighted = 37.8243;
+% % Calculated in plot_GRT_Annual_SolarPath_angles.m
+% Tilt_angle_summer = 55.9353; % (Noon on 21 June)
+% Tilt_angle_winter = 9.0829; % (Noon on 21 June)
+% Tilt_angle_optimal_mean = 32.5474;
+% Tilt_angle_optimal_weighted = 37.8243;
 
 %% Max Irradiance Curve estimate
 width1 = length(GHI_CMP1_H);
@@ -173,7 +167,9 @@ max_height = max(GHI_CMP1_H);
 % clear j;
 
 variable_AngleVariables; % Load calculated values
-TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_summer,Tilt_angle_winter,0.0];
+TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_min,Tilt_angle_max,0.0];
+TiltLabels = {'Tilt angle (weighted)','Tilt angle (mean)',...
+        'Tilt angle (min)','Tilt angle (max)','No tilt (horizonal)'};
 Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)));
 
 for i=1:numel(TiltAngles)
@@ -181,15 +177,6 @@ for i=1:numel(TiltAngles)
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
     Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
     Energy_tilt_totals(:,i) = cumtrapz(Max_solar_power(:,i));
-end
-
-[n m] = size(Energy_tilt_totals);
-labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
-        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
-disp('Total irradiance on tilted surface:')
-for i=1:m
-    disp([labels{i},' at ',num2str(TiltAngles(i)),...
-        '° is ', num2str(Energy_tilt_totals(end,i)) , ' W/m^2' ])
 end
 
 %% Fit: 'Fourier Fit'. (temperature)
@@ -228,12 +215,10 @@ if ismember(1,view) || ismember(1,output)
         'Color','white');
     
     [n m] = size(irradiance_ratio);
-    labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
-        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
     for i=1:m
         plot_num = strcat('p1_',num2str(i+1));
         variable.(plot_num) = plot(DateDayIndex,irradiance_ratio(:,i),...
-        'DisplayName',labels{i},...
+        'DisplayName',TiltLabels{i},...
         'LineStyle','-',...
         'LineWidth',2);
         hold on
@@ -253,12 +238,10 @@ if ismember(1,view) || ismember(1,output)
         'FontName',fontName);
     ylabel(ax1,'Irradiance Ratios');
     xlabel(ax1,'Date \rightarrow');
-    datetick(ax1,'x','dd mmm yyyy','keepticks','keeplimits')
+%     datetick(ax1,'x','dd mmm yyyy','keepticks','keeplimits')
     
     % Legend
     legend1 = legend(ax1,'show');
-%         {'Maximum surface radiance','Tilt angle optimal (weighted)',...
-%         'Tilt angle optimal (mean)','Tilt angle (summer)','Tilt angle (winter)'});
     set(legend1,...
         'Box','off',...
         'Position',[0.401567265013978 0.784686488453122 0.193618460538053 0.0666553310498579],...
@@ -367,13 +350,22 @@ if ismember(3,view) || ismember(3,output)
         'name','Effect of tilt angle on irradiance collection',...
         'Color','white');
 
+%     p2_1 = plot(allDates_H,GHI_CMP1_H,...                           
+%         'DisplayName','Measured GHI, Graaf-Reinet',...
+%         'Color',[0.729411764705882 0.831372549019608 0.956862745098039 0.6],...     % [R G B Alpha]
+%         'LineStyle','-',...
+%         'LineWidth',0.8,...
+%         'MarkerFaceColor',[0 0.447058826684952 0.74117648601532],...
+%         'MarkerEdgeColor',[0 0.447058826684952 0.74117648601532],...
+%         'MarkerSize',2,...
+%         'Marker','o');
+%     hold on
+    
     [n m] = size(Max_solar_power);
-    labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
-        'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
     for i=1:m
-        plot_num = strcat('p1_',num2str(i+1));
+        plot_num = strcat('p2_',num2str(i+1));
         variable.(plot_num) = plot(DateDayIndex,Max_solar_power(:,i),...
-        'DisplayName',labels{i},...
+        'DisplayName',TiltLabels{i},...
         'LineStyle','-',...
         'LineWidth',2);
         hold on
@@ -394,7 +386,7 @@ if ismember(3,view) || ismember(3,output)
         'FontName',fontName);
     ylabel(ax3,'Solar Irradiance');
     xlabel(ax3,'Date \rightarrow');
-    datetick(ax3,'x','dd mmm yyyy','keepticks','keeplimits')
+%     datetick(ax3,'x','dd mmm yyyy','keepticks','keeplimits')
     
     % Legend
     legend3 = legend(ax3,'show');
@@ -420,6 +412,27 @@ if ismember(3,view) || ismember(3,output)
 end
 
 %% Output
+
+disp('-------------------------')
+disp(['Maximum air temperature: ',num2str(round(Max_air_temp,2)),'°C'])
+disp(['Minimum air temperature: ',num2str(round(Min_air_temp,2)),'°C'])
+disp(['Maximum annual variation in air temperature: ',num2str(round(Temperature_variation,2)),'°C'])
+disp(['Average annual air temperature: ',num2str(round(Average_air_temp,2)),'°C'])
+disp(' ')
+
+% labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
+%         'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
+[n m] = size(Energy_tilt_totals);
+disp('Total irradiance on tilted surface:')
+for i=1:m
+    disp([TiltLabels{i},' at ',num2str(TiltAngles(i)),...
+        '° is ', num2str(Energy_tilt_totals(end,i)) , ' W/m^2' ])
+end
+disp(['The largest total energy is ',])
+
+disp(' ')
+
+
 if ismember(1,view) || ismember(1,output)
     set(fig_1, 'Visible', 'on');
     WinOnTop( fig_1, true );
