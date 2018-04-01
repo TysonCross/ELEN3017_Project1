@@ -3,7 +3,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
 view    = [1 2]; % [1 2]
-output  = [];
+output  = view;
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
@@ -32,16 +32,27 @@ variable_EnergyTemp; % load energy and temperature values for simulation
     Solar_range_Absolute
 %}
 
+variable_Angles; % load solar angles
+%{
+    Tilt_angle_optimal
+    Tilt_angle_max
+    Tilt_angle_min
+    Tilt_angle_optimal_mean
+    Tilt_angle_optimal_weighted
+    SunZenithAngleSimple
+    SunZenithAngle
+    DeclinationAngle
+%}
+
 DateStep = minutes(1);
-startDate = datetime(735771, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
-endDate = datetime(735771.9993, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
-allDates = (startDate:DateStep:endDate)';
+startDate_jun = datetime(735771, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
+endDate_jun = datetime(735771.9993, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
+allDates = (startDate_jun:DateStep:endDate_jun)';
 allDatesNum = datenum(allDates);
 
-labels = {'Unoccluded summer noon','Occluded summer noon','Unoccluded winter noon','Occluded winter noon'}
 % labels = {'200 W/m^2','400 W/m^2','600 W/m^2','800 W/m^2','1000 W/m^2'}
 
-%% Simulation Paramater input
+%% Simulation Parameter input
 % 21 Dec/ 21 June / 21 March
 
 % From datasheet for TSM-300 PA14 at STC
@@ -52,8 +63,9 @@ V_oc_0 = 45.3;                                              % [V]
 I_sc_0 = 8.60;                                              % [A]
 eta = 0.155;                                                % 15.5 percent efficiency
 
+panel_number = 3;
 panel_area = (1.956*0.992);                                 % m^2
-panel_area_total = 3 * panel_area;                          % m^2
+panel_area_total = panel_number * panel_area;             	% m^2
 
 % Site Data
 % T_a = 18.8;                                                   % [C] 
@@ -97,21 +109,31 @@ beta = G_pu.*(I_sc_0 + alpha_I);
 gamma = 1/(V_mp_0 - V_oc_0) .* log((I_sc_0 - I_mp_0)./(I_sc_0 + alpha_I));
 p = 1;
 
-V = [0:50];
-MPP = [];
-mpp_index = 0;
+V = [0:0.5:50];
 for i=1:numel(V)
     I(:,i) = G_pu.*(I_sc_0 + alpha_I) - beta.*exp(gamma.*(V(i) + alpha_V - V_oc_0));
     P(:,i) = V(i).*I(:,i);
-    MPP(i) = max(P(:,i).*V(i));
-    if MPP(i)>max(MPP(1:i-1))
-        mpp_index = i;
-    end
+	R(:,i) = V(i)./I(:,i);
 end
 
-% V_cell = V./N_s;                                    % implies V_module = V_cell*N_s;
-% I_cell = I./N_p;                                    % implies I_module = I_cell*N_p;
-Total_voltage = V.*number_modules;
+[n m]  = size(P);
+mpp_index =[];
+for i=1:n
+    [MPP(i) mpp_index(i)] = max(P(i,:));
+    Load(i) = R(i,mpp_index(i));
+end
+
+%% Energy and power harvesting
+% Fixed:
+b_angle = deg2rad(90-SunZenithAngle([172 355]) + Tilt_angle_optimal_weighted);
+Max_solar_energy_Dec = GHI_Max_Dec*sin(b_angle(2));
+Max_solar_energy_Jun = GHI_Max_Dec*sin(b_angle(1));
+Average_solar_energy_day = (Max_solar_energy_Dec+Max_solar_energy_Jun)/2; % per day
+Average_solar_energy_year = Average_solar_energy_day*365; % per year
+Energy_harvested_max = Average_solar_energy_year * panel_area_total * eta; % captured
+Energy_harvested_realistic = Energy_harvested_max * 0.75;
+
+% MTTP:
 
 disp('Calculations complete')
 
@@ -125,7 +147,18 @@ set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
 set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
 
-%% Fig1 - Power Curve Simulations
+% labels = {'Unoccluded summer noon','Occluded summer noon','Unoccluded winter noon','Occluded winter noon'};
+labels{1} = strcat('Unoccluded summer noon:', num2str(round(G(1))),' W/m^2');
+labels{2} = strcat('Occluded summer noon:', num2str(round(G(2))),' W/m^2');
+labels{3} = strcat('Unoccluded winter noon:', num2str(round(G(3))),' W/m^2');
+labels{4} = strcat('Occluded winter noon: ', num2str(round(G(4))),' W/m^2');
+
+for i=1:numel(mpp_index)
+    mpplabelsIV{i} = strcat('MPP (', num2str(round(V(mpp_index(i)),2)),{','},num2str(round(I(i,mpp_index(i)),2)),')');
+    mpplabelsPV{i} = strcat('MPP (', num2str(round(V(mpp_index(i)),2)),{','},num2str(round(P(i,mpp_index(i)),2)),')');
+end
+
+%% Fig1 - PV Curve Simulations
 if ismember(1,view) || ismember(1,output)
     fig1 =  figure('Position',...                               % draw figure
             [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
@@ -143,8 +176,30 @@ if ismember(1,view) || ismember(1,output)
         'Linestyle','-',... %linS{mod(i,numel(linS))+1}
         'LineWidth',1.5);
         hold on
+        
+        x_pos = V(mpp_index(i));
+        y_pos = P(i,double(mpp_index(i)));
+        
+        ref_num = strcat('r1_',num2str(i));
+        variable.(ref_num) = plot(x_pos,y_pos,'o');
+        set(variable.(ref_num),...
+        'Color',[0.18 0.18 0.18],...
+        'DisplayName','',...
+        'MarkerSize',6,...
+        'MarkerFaceColor',[0.18 0.18 0.18],...
+        'Linestyle','-',...
+        'LineWidth',1.5);
+        hold on
+        
+        offset_x = -3;
+        offset_y = 10;
+        ann_num = strcat('a2_',num2str(i));
+        variable.(ann_num) = text(x_pos+offset_x, y_pos+offset_y, mpplabelsPV{i},...
+            'Color',[0.18 0.18 0.18],...
+            'FontSize',12,...
+            'FontName',fontName);
     end
-
+    
     % Axis
     ax1 = gca;
     set(ax1,...
@@ -155,7 +210,7 @@ if ismember(1,view) || ismember(1,output)
         'FontName',fontName,...
         'XTick',[0:5:50],...
         'Xlim',[0 50],...
-        'YTick',[0:10:310],...
+        'YTick',[0:50:310],...
         'Ylim',[0 310]);
     ylabel(ax1,...
         'Power [W] \rightarrow');
@@ -163,9 +218,11 @@ if ismember(1,view) || ismember(1,output)
         'Voltage [V] \rightarrow');
 
     legend1 = legend(ax1,'show');
-    set(legend1,'Position',[0.0957221144144121 0.858578562632453 0.137065637065637 0.101203065657795],...
+    set(legend1,'Position',[0.0954496654649517 0.84581911460007 0.239382239382239 0.119744085320292],...
         'Box','on',...
         'EdgeColor',[1 1 1]);
+    legend1.PlotChildren = legend1.PlotChildren([1 3 5 7]);
+
     
     % Adjust figure 1
     pos_1 = get(ax1, 'Position');                             	% Current position
@@ -192,12 +249,34 @@ if ismember(2,view) || ismember(2,output)
     linS = {'-','--',':','-.'};
     [n m] = size(I);
     for i=1:n
-        plot_num = strcat('p1_',num2str(i));
+        plot_num = strcat('p2_',num2str(i));
         variable.(plot_num) = plot(V,I(i,:),...
         'DisplayName',labels{i},...
         'Linestyle','-',... %linS{mod(i,numel(linS))+1}
         'LineWidth',1.5);
         hold on
+         
+        x_pos = V(mpp_index(i));
+        y_pos = I(i,double(mpp_index(i)));
+        
+        ref_num = strcat('r2_',num2str(i));
+        variable.(ref_num) = plot(x_pos,y_pos,'o');
+        set(variable.(ref_num),...
+        'DisplayName','',...
+        'Color',[0.18 0.18 0.18],...
+        'MarkerSize',6,...
+        'MarkerFaceColor',[0.18 0.18 0.18],...
+        'Linestyle','-',...
+        'LineWidth',1.5);
+        hold on
+        
+        offset_x = -0.6;
+        offset_y = 0.26;
+        ann_num = strcat('a2_',num2str(i));
+        variable.(ann_num) = text(x_pos+offset_x,y_pos+offset_y,mpplabelsIV{i},...
+            'Color',[0.18 0.18 0.18],...
+            'FontSize',12,...
+            'FontName',fontName);
     end
     
     % Axis
@@ -217,10 +296,63 @@ if ismember(2,view) || ismember(2,output)
     xlabel(ax2,...
         'Voltage [V] \rightarrow');
 
-    legend2 = legend(ax2,'show');
-    set(legend2,'Position',[0.843954414328516 0.869644712608839 0.11699604743083 0.081366459627329],...
-        'Box','on',...
-        'EdgeColor',[1 1 1]);
+    a2_1a = annotation('textbox',[0.0961796067500641 0.839090836378138 0.219691769438439 0.0432623792124927],...
+            'String',labels{1},...
+            'LineStyle','none',...
+            'FitBoxToText','on',...
+            'BackgroundColor','white',...
+            'FontSize',12,...
+            'FontName',fontName);
+    a2_1b = annotation('textbox',[0.0961796067500641 0.468221659415665 0.200378207290005 0.0432623792124927],...
+            'String',labels{2},...
+            'LineStyle','none',...
+            'FitBoxToText','on',...
+            'BackgroundColor','white',...
+            'FontSize',12,...
+            'FontName',fontName);
+    a2_1c = annotation('textbox',[0.0961796067500641 0.176061646075057 0.202792402558559 0.0432623792124927],...
+            'String',labels{3},...
+            'LineStyle','none',...
+            'FitBoxToText','on',...
+            'BackgroundColor','white',...
+            'FontSize',12,...
+            'FontName',fontName);
+    a2_1d = annotation('textbox',[0.0961796067500641 0.347566077953153 0.189755748108366 0.0432623792124927],...
+            'String',labels{4},...
+            'LineStyle','none',...
+            'FitBoxToText','on',...
+            'BackgroundColor','white',...
+            'FontSize',12,...
+            'FontName',fontName);
+    
+%     a2_2a = annotation('textbox',[0.745587241865814 0.798158071555653 0.0932158469372744 0.0210073071151357],...
+%             'String',mpplabels{1},...
+%             'LineStyle','none',...
+%             'FitBoxToText','on',...
+%             'BackgroundColor','white',...
+%             'FontSize',12,...
+%             'FontName',fontName);
+%     a2_2b = annotation('textbox',[0.745587241865814 0.456556060489419 0.0864590901805178 0.0179416211180002],...
+%             'String',mpplabels{2},...
+%             'LineStyle','none',...
+%             'FitBoxToText','on',...
+%             'BackgroundColor','white',...
+%             'FontSize',12,...
+%             'FontName',fontName);
+%     a2_2c = annotation('textbox',[0.744621990900563 0.342356474605942 0.0719803257017505 0.0177671729983855],...
+%             'String',mpplabels{3},...
+%             'LineStyle','none',...
+%             'FitBoxToText','on',...
+%             'BackgroundColor','white',...
+%             'FontSize',12,...
+%             'FontName',fontName);
+%     a2_2d = text('textbox',[0.744621990900563 0.180122042476874 0.0825980863195146 0.0223509096096795],...
+%             'String',mpplabels{4},...
+%             'LineStyle','none',...
+%             'FitBoxToText','on',...
+%             'BackgroundColor','white',...
+%             'FontSize',12,...
+%             'FontName',fontName);
     
     % Adjust Figure 2
     pos_2 = get(ax2, 'Position');                             	% Current position
@@ -237,9 +369,27 @@ end
 %% Output
 disp(' ')
 disp('-------------------------')
-disp(['MPP is: ',num2str(round(MPP(mpp_index),2)),' W'])
-disp(['Voltage at MPP: ',num2str(round(V(mpp_index),2))])
-disp(['Current at MPP: ',num2str(round(I(mpp_index),2))])
+%     [MPP(i) mpp_index(i)] = max(P(i,:));
+
+[n m]  = size(P);
+for i=1:n
+disp([labels{i},':'])
+disp(['MPP is: ',num2str(round(MPP(i),2)),' W'])
+disp(['Voltage at MPP: ',num2str(round(V(mpp_index(i)),2))])
+disp(['Current at MPP: ',num2str(round(I(i,mpp_index(i)),2))])
+disp(['Load at MPP: ',num2str(round(R(i,mpp_index(i)),2))])
+disp(' ')
+end
+
+disp(['Average solar energy striking tilted surface: ',...
+    num2str(round(Average_solar_energy_day/1000,2)),' kW/day']); % total Average striking surface
+disp(['Average_solar_energy striking tilted surface ',...
+    num2str(round(Average_solar_energy_year/1000,2)),' kW/year']); % total Average striking surface in a year
+disp(['Maximal energy harvested is ',...
+    num2str(round(Energy_harvested_max/1000,2)),' kW/year']); % Total captured on tilted panel
+disp(['Accounting for occlusion, the maximum harvested energy is ',...
+    num2str(round(Energy_harvested_realistic/1000,2)),' kW/year']); % Allowing for weather
+
 disp('-------------------------')
 disp(' ')
 
@@ -266,7 +416,7 @@ if ismember(2,output)
     close(fig2);
 end
 if ismember(1,output)
-	export_fig ('../Report/images/Power_curves.eps',fig1)
+	export_fig ('../Report/images/PV_curves.eps',fig1)
     disp('Exported Fig1')
     close(fig1);
 end

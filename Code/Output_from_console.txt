@@ -27,6 +27,34 @@ Annual irradiance totals for tilted surface:
    No tilt (horizonal) at 0° is 268.6752 kW/m^2
 
 E:
+Unoccluded summer noon:1139 W/m^2:
+MPP is: 295.27 W
+Voltage at MPP: 37.5
+Current at MPP: 7.87
+Load at MPP: 4.76
+ 
+Occluded summer noon:397 W/m^2:
+MPP is: 105.03 W
+Voltage at MPP: 37.5
+Current at MPP: 2.8
+Load at MPP: 13.39
+ 
+Unoccluded winter noon:144 W/m^2:
+MPP is: 38.04 W
+Voltage at MPP: 37.5
+Current at MPP: 1.01
+Load at MPP: 36.97
+ 
+Occluded winter noon:571 W/m^2:
+MPP is: 151.31 W
+Voltage at MPP: 37.5
+Current at MPP: 4.03
+Load at MPP: 9.29
+ 
+Average solar energy striking tilted surface: 1.05 kW/day
+Average_solar_energy striking tilted surface 382.21 kW/year
+Maximal energy harvested is 344.86 kW/year
+Accounting for occlusion, the maximum harvested energy is 258.64 kW/year
 
 -----------------------------------
 Misc:

@@ -169,7 +169,6 @@ Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)
 for i=1:numel(TiltAngles)
    irradiance_ratio(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))...
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
-%     Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
     b_angle = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
     Max_solar_energy(:,i) = Daily_max_irradiance(:).* sin(b_angle);
     Energy_tilt_totals(:,i) = cumtrapz(Max_solar_energy(:,i));
