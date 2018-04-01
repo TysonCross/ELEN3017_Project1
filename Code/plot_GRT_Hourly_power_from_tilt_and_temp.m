@@ -1,8 +1,8 @@
 % GRT Expected Power output & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1 2 3]; % [1 2 3]
-output  = [1 2 3];
+view    = [3]; % [1 2 3]
+output  = [];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -175,7 +175,9 @@ Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)
 for i=1:numel(TiltAngles)
    irradiance_ratio(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))...
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
-    Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
+%     Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
+    b_angle = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
+    Max_solar_power(:,i) = Daily_max_irradiance(:).* sin(b_angle);
     Energy_tilt_totals(:,i) = cumtrapz(Max_solar_power(:,i));
 end
 
@@ -360,6 +362,7 @@ if ismember(3,view) || ismember(3,output)
 %         'MarkerSize',2,...
 %         'Marker','o');
 %     hold on
+
     
     [n m] = size(Max_solar_power);
     for i=1:m
@@ -367,9 +370,16 @@ if ismember(3,view) || ismember(3,output)
         variable.(plot_num) = plot(DateDayIndex,Max_solar_power(:,i),...
         'DisplayName',TiltLabels{i},...
         'LineStyle','-',...
-        'LineWidth',2);
+        'LineWidth',1.5);
         hold on
     end
+    
+    p2_1 = plot(DateDayIndex,Daily_max_irradiance,...
+        'DisplayName','Maximum surface radiance',...
+        'Color',[0.9 0.18 0.18 1],...                 
+        'LineStyle','--',...
+        'LineWidth',1.5);
+    hold on
     
     % Axes and labels
     ax3 = gca;
@@ -384,14 +394,12 @@ if ismember(3,view) || ismember(3,output)
         'XTickLabel',DateMonthLabel,...
         'Ylim',[0 1200],...
         'FontName',fontName);
-    ylabel(ax3,'Solar Irradiance');
+    ylabel(ax3,'Solar Irradiance (W/m^2) \rightarrow');
     xlabel(ax3,'Date \rightarrow');
 %     datetick(ax3,'x','dd mmm yyyy','keepticks','keeplimits')
     
     % Legend
     legend3 = legend(ax3,'show');
-%         {'Maximum surface radiance','Tilt angle optimal (weighted)',...
-%         'Tilt angle optimal (mean)','Tilt angle (summer)','Tilt angle (winter)'});
     set(legend3,...
         'Box','off',...
         'Position',[0.401567265013978 0.784686488453122 0.193618460538053 0.0666553310498579],...
@@ -420,17 +428,14 @@ disp(['Maximum annual variation in air temperature: ',num2str(round(Temperature_
 disp(['Average annual air temperature: ',num2str(round(Average_air_temp,2)),'°C'])
 disp(' ')
 
-% labels = {'Tilt angle (weighted)','Tilt angle (mean)',...
-%         'Tilt angle (summer)','Tilt angle (winter)','Horizonal Surface'};
 [n m] = size(Energy_tilt_totals);
 disp('Total irradiance on tilted surface:')
 for i=1:m
     disp([TiltLabels{i},' at ',num2str(TiltAngles(i)),...
         '° is ', num2str(Energy_tilt_totals(end,i)) , ' W/m^2' ])
 end
-disp(['The largest total energy is ',])
-
 disp(' ')
+disp('-------------------------')
 
 
 if ismember(1,view) || ismember(1,output)
