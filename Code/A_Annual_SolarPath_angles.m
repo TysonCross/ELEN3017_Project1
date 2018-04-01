@@ -1,7 +1,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = [1 2 3 4 5]; % [1 2 3 4 5]
-output  = [];
+view    = [1 2 4 5]; % [1 2 3 4 5]
+output  = view;
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -613,13 +613,14 @@ if ismember(5,view) || ismember(5,output)
         'XTick',DateMonthIndex(1:end-1),...
         'Xlim',DateMonthLimit,...
         'XTickLabel',DateMonthLabel,...
-        'YTick',sort([0:6:60 Tilt_angle_optimal_mean Tilt_angle_optimal_weighted Tilt_angle_max Tilt_angle_min]),...
+        'YTick',sort([0:5:60 Tilt_angle_optimal_mean Tilt_angle_optimal_weighted Tilt_angle_max Tilt_angle_min]),...
         'Ylim',[0 60]);
     ylabel(ax5,...
         'Tilt Angle (deg)');
     xlabel(ax5,...
         'Date \rightarrow');
 
+	ax5.YTick([3 9 11 15]) = []; % Remove spaced values close to the tilt angles, for neatness
     % Ticks formatting
     % ax5.YAxis.TickLabelFormat = '%,.1f';
     yt=get(ax5,'ytick');
@@ -647,9 +648,9 @@ end
 %% Output
 
 % Write Variables to file
-outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_AngleVariables.m';
+outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_Angles.m';
 fid = fopen(outfile, 'wt');
-fprintf(fid, '%s\n','% Calculated in plot_GRT_Annual_SolarPath_angles.m');
+fprintf(fid, '%s\n','% Calculated in A_Annual_SolarPath_angles.m');
 fprintf(fid, 'Tilt_angle_optimal = [');
 fprintf(fid, '%f,',Tilt_angle_optimal(1:end-1));
 fprintf(fid, '%f];\n',Tilt_angle_optimal(end));
@@ -667,7 +668,7 @@ fprintf(fid, 'DeclinationAngle = [');
 fprintf(fid, '%f,',DeclinationAngle(1:end-1));
 fprintf(fid, '%f];\n',DeclinationAngle(end));
 fclose(fid);
-disp('Variables written to file:/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_AngleVariables.m') 
+disp(['Variables written to file: ',outfile]) 
 
 if ismember(1,view) || ismember(1,output)
     set(fig1, 'Visible', 'on');

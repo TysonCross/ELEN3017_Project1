@@ -5,11 +5,46 @@ clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Chil
 view    = [1 2]; % [1 2]
 output  = [];
 
-%% Data input
+%% Data for GRT 21st June/December (2014/2015)
+Latitude = -32.48547;
+Longitude = 24.58582;
+Elevation = 660; % metres
+
+variable_EnergyTemp; % load energy and temperature values for simulation
+%{
+    The following variables are loaded:
+
+    GHI_CMP11_Dec_2014
+    GHI_Max_Dec
+    Air_Temp_Max_Dec
+    Air_Temp_Min_Dec
+
+    GHI_CMP11_Jun_2014
+    GHI_Max_Jun
+    Air_Temp_Max_Jun
+    Air_Temp_Min_Jun
+
+    Air_Temp_range_Max_Delta
+    Air_Temp_range_Absolute
+    Total_insolation_Dec
+    Total_insolation_Jun
+    Solar_range_Max_Delta
+    Solar_range_Absolute
+%}
+
+DateStep = minutes(1);
+startDate = datetime(735771, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
+endDate = datetime(735771.9993, 'Format', 'dd-MMM-yyyy HH:mm', 'convertFrom','datenum');
+allDates = (startDate:DateStep:endDate)';
+allDatesNum = datenum(allDates);
+
+labels = {'Max Irradiance','Min Irradiance'}
+labels = {'200 W/m^2','400 W/m^2','600 W/m^2','800 W/m^2','1000 W/m^2'}
+
+
+
+%% Simulation Paramater input
 % 21 Dec/ 21 June / 21 March
-T_a = 18.8;                                                 % [C]       <- Will vary
-G = [10:100:900];                                % [W/m^2]   <- Will vary
-G_pu = G./1000;%max(max(G),1000);                                	% Normalised (Site data>1000)
 
 % From datasheet for TSM-300 PA14 at STC
 P_max = 300;                                                % [W]
@@ -17,12 +52,23 @@ V_mp_0 = 36.9;                                              % [V]
 I_mp_0 = 8.13;                                              % [A]
 V_oc_0 = 45.3;                                              % [V]
 I_sc_0 = 8.60;                                              % [A]
-efficiency = 15.5;
+eta = 0.155;                                                % 15.5 percent efficiency
+
+panel_area = (1.956*0.992);                                 % m^2
+panel_area_total = 3 * panel_area;                          % m^2
+
+% Site Data
+% T_a = 18.8;                                                   % [C] 
+% G = [max(GHI_CMP11_Dec_2014);max(GHI_CMP11_Jun_2014)];      % W/m^2
+% T_a = [Air_Temp_Max_Dec;Air_Temp_Max_Jun];               	% [C]
+T_a = [25:5:45];                                            % [C]
+G = [200:200:1000];                                         % W/m^2
+G_pu = G./1000;                                             % Normalised (Site data>1000)
 
 % Temperature coefficients
-alpha_P_sc = -0.44;                                         % percentage/°C
-alpha_I_sc = -0.33                                          % percentage/°C, short-circuit current
-alpha_V_oc = 0.046                                          % percentage/°C, open-circuit voltage
+alpha_P_sc = -0.44/100;                                         % percentage/°C
+alpha_I_sc = -0.33/100;                                         % percentage/°C, short-circuit current
+alpha_V_oc = 0.046/100;                                         % percentage/°C, open-circuit voltage
 
 % Operating Temperature of a cell
 % (relates disparity between NOTC and STC)
@@ -33,23 +79,22 @@ delta_T = T_c-25;
 % For a single module made of multiple cells, connected in series
 N_s = 72;                                                   % <- must check
 N_p = 1;                                                    % <- must check
-% V_cell = V_module/N_s;                                    % implies V_module = V_cell*N_s;
-% I_cell = I_module/N_p;                                    % implies I_module = I_cell*N_p;
 
+number_modules = 3;
 alpha_I = alpha_I_sc.*delta_T;
-alpha_V = alpha_V_oc.*delta_T
+alpha_V = alpha_V_oc.*delta_T;
 
 %% Calculations
 I_ph = G_pu.*(I_sc_0 + alpha_I);
-I_mpp = G_pu.*(I_mp_0 + alpha_I);
+I_mpp = abs(G_pu.*(I_mp_0 + alpha_I));
 V_oc = V_oc_0 - alpha_V;
 V_mpp = V_mp_0 - alpha_V;
 
-R_s = ((V_oc_0 - V_mp_0)/4) ./ (G_pu.*(I_mp_0 + alpha_I_sc));
+R_s = 0; %((V_oc_0 - V_mp_0)/4) ./ (G_pu.*(I_mp_0 + alpha_I_sc));
 R_sh = Inf;
 
-beta = G_pu.*(I_sc_0 + alpha_I);
-gamma = 1/(V_mp_0 - V_oc_0) .* log((I_sc_0 - I_mp_0)./(I_sc_0 + alpha_I));
+beta = real(G_pu.*(I_sc_0 + alpha_I));
+gamma = real(1/(V_mp_0 - V_oc_0) .* log((I_sc_0 - I_mp_0)./(I_sc_0 + alpha_I)));
 p = 1;
 
 V = [0:V_oc_0];
@@ -58,15 +103,18 @@ mpp_index = 0;
 for i=1:numel(V)
     I(:,i) = G_pu.*(I_sc_0 + alpha_I) - beta.*exp(gamma.*(V(i) + alpha_V - V_oc_0));
     P(:,i) = V(i).*I(:,i).*I(:,i);
-    MPP(i) = max(P(:,i).*V(i))
+    MPP(i) = max(P(:,i).*V(i));
     if MPP(i)>max(MPP(1:i-1))
         mpp_index = i;
     end
 end
-    
+
+V_cell = V./N_s;                                    % implies V_module = V_cell*N_s;
+I_cell = I./N_p;                                    % implies I_module = I_cell*N_p;
+
+Total_voltage = V.*number_modules;
 
 disp('Calculations complete')
-
 
 %% Display setting and output setup
 scr = get(groot,'ScreenSize');                              % screen resolution
@@ -77,7 +125,6 @@ fontName='Helvetica';
 set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
 set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
-
 
 %% Fig1 - Power Curve Simulations
 if ismember(1,view) || ismember(1,output)
@@ -93,7 +140,7 @@ if ismember(1,view) || ismember(1,output)
     for i=1:n
         plot_num = strcat('p1_',num2str(i));
         variable.(plot_num) = plot(V,P(i,:),...
-        'DisplayName','Voltage vs. Power',...
+        'DisplayName',labels{i},...
         'Linestyle',linS{mod(i,numel(linS))+1},...
         'LineWidth',1.5);
         hold on
@@ -101,16 +148,16 @@ if ismember(1,view) || ismember(1,output)
 
     % Axis
     ax1 = gca;
-    set(ax1,...
-        'FontSize',14,...
-        'Box','off',...
-        'YMinorTick','on',...
-        'XMinorTick','on',...
-        'FontName',fontName,...
-        'XTick',[0:5:45],...
-        'Xlim',[0 45],...
-        'YTick',[0:10:250],...
-        'Ylim',[0 250]);
+%     set(ax1,...
+%         'FontSize',14,...
+%         'Box','off',...
+%         'YMinorTick','on',...
+%         'XMinorTick','on',...
+%         'FontName',fontName,...
+%         'XTick',[0:5:50],...
+%         'Xlim',[0 50],...
+%         'YTick',[0:10:310],...
+%         'Ylim',[0 310]);
     ylabel(ax1,...
         'Power [W] \rightarrow');
     xlabel(ax1,...
@@ -148,7 +195,7 @@ if ismember(2,view) || ismember(2,output)
     for i=1:n
         plot_num = strcat('p1_',num2str(i));
         variable.(plot_num) = plot(V,I(i,:),...
-        'DisplayName','Voltage vs. Current',...
+        'DisplayName',labels{i},...
         'Linestyle',linS{mod(i,numel(linS))+1},...
         'LineWidth',1.5);
         hold on
@@ -156,16 +203,16 @@ if ismember(2,view) || ismember(2,output)
     
     % Axis
     ax2 = gca;
-    set(ax2,...
-        'FontSize',14,...
-        'Box','off',...
-        'YMinorTick','on',...
-        'XMinorTick','on',...
-        'FontName',fontName,...
-        'XTick',[0:5:45],...
-        'Xlim',[0 45],...
-        'YTick',[0:3],...
-        'Ylim',[0 3]);
+%     set(ax2,...
+%         'FontSize',14,...
+%         'Box','off',...
+%         'YMinorTick','on',...
+%         'XMinorTick','on',...
+%         'FontName',fontName,...
+%         'XTick',[0:5:50],...
+%         'Xlim',[0 50],...
+%         'YTick',[0:8],...
+%         'Ylim',[0 8]);
     ylabel(ax2,...
         'Current [A] \rightarrow');
     xlabel(ax2,...
@@ -189,11 +236,12 @@ if ismember(2,view) || ismember(2,output)
 end
 
 %% Output
-
+disp(' ')
 disp('-------------------------')
 disp(['MPP is: ',num2str(round(MPP(mpp_index),2)),' W'])
 disp(['Voltage at MPP: ',num2str(round(V(mpp_index),2))])
 disp(['Current at MPP: ',num2str(round(I(mpp_index),2))])
+disp('-------------------------')
 disp(' ')
 
 

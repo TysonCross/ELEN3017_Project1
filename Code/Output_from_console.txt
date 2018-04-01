@@ -1,0 +1,32 @@
+A:
+Maximum optimal tilt angle (Winter): 56.49°
+Mimimum optimal tilt angle (SUmmer): 10.93°
+Annual tilt variation: 45.56°
+Optimal tilt angle (mean): 33.95°
+Optimal tilt angle (weighted): 28.92°
+
+B:
+Total daily solar insolation for winter solstice: 207.47 kW/m^2
+Total daily solar insolation for summer solstice: 571.98 kW/m^2
+Maximum solar insolation peak at 12:00 on 21 December: 1140.39 W/m^2
+Maximum solar insolation peak at 12:00 on 21 June: 571.18 W/m^2
+
+D:
+Maximum air temperature: 41.98°C
+Minimum air temperature: -4.65°C
+Maximum annual variation in air temperature: 46.63°C
+Average annual air temperature: 18.85°C
+ 
+Annual measured solar irradiance total :2765.66 kW/m^2
+ 
+Annual irradiance totals for tilted surface:
+   Tilt angle (weighted) at 28.9169° is 311.8565 kW/m^2
+   Tilt angle (mean) at 33.9488° is 311.4346 kW/m^2
+   Tilt angle (min) at 10.93° is 293.8693 kW/m^2
+   Tilt angle (max) at 56.49° is 280.5522 kW/m^2
+   No tilt (horizonal) at 0° is 268.6752 kW/m^2
+
+E:
+
+-----------------------------------
+Misc:

@@ -1,8 +1,8 @@
 % GRT Expected Power output & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [3]; % [1 2 3]
-output  = [];
+view    = [2 3]; % [1 2 3]
+output  = view;
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -140,12 +140,6 @@ Min_air_temp = min(Air_Temp1_H);
 Temperature_variation = abs(Max_air_temp-Min_air_temp);
 Average_air_temp = mean(Air_Temp1_H,'omitnan');
 
-% % Calculated in plot_GRT_Annual_SolarPath_angles.m
-% Tilt_angle_summer = 55.9353; % (Noon on 21 June)
-% Tilt_angle_winter = 9.0829; % (Noon on 21 June)
-% Tilt_angle_optimal_mean = 32.5474;
-% Tilt_angle_optimal_weighted = 37.8243;
-
 %% Max Irradiance Curve estimate
 width1 = length(GHI_CMP1_H);
 order1 = floor( log10(max(GHI_CMP1_H)));
@@ -166,7 +160,7 @@ max_height = max(GHI_CMP1_H);
 % end
 % clear j;
 
-variable_AngleVariables; % Load calculated values
+variable_Angles; % Load calculated values
 TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_min,Tilt_angle_max,0.0];
 TiltLabels = {'Tilt angle (weighted)','Tilt angle (mean)',...
         'Tilt angle (min)','Tilt angle (max)','No tilt (horizonal)'};
@@ -177,9 +171,14 @@ for i=1:numel(TiltAngles)
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
 %     Max_solar_power(:,i) = (Daily_max_irradiance(:).*irradiance_ratio(:,i))/1.7853; % normalising ratio
     b_angle = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
-    Max_solar_power(:,i) = Daily_max_irradiance(:).* sin(b_angle);
-    Energy_tilt_totals(:,i) = cumtrapz(Max_solar_power(:,i));
+    Max_solar_energy(:,i) = Daily_max_irradiance(:).* sin(b_angle);
+    Energy_tilt_totals(:,i) = cumtrapz(Max_solar_energy(:,i));
 end
+
+Total_measured_annual_solar_energy = max(sum(GHI_CMP1_H,'omitnan'));
+
+%% Prepare selected data for output (power simulation input)
+
 
 %% Fit: 'Fourier Fit'. (temperature)
 [xData, yData] = prepareCurveData( DateNum_H, Air_Temp1_H );
@@ -206,14 +205,14 @@ set(0,'defaultAxesFontName', fontName);                         % Make fonts pre
 set(0,'defaultTextFontName', fontName);
 set(groot,'FixedWidthFontName', 'ElroNet Monospace')            % replace with your system's monospaced font
 
-%% Fig 1 - Global Horizontal Irradiance Average (Hourly)
+%% Fig 1 - Comparison of Irradiance Ratios
 if ismember(1,view) || ismember(1,output)
     
     fig_1 = figure('Position',...                            	% draw figure
         [offset(1) offset(2) scr(3)*ratio scr(4)*ratio],...
         'Visible', 'off',...
         'numbertitle','on',...                                  % Give figure useful title
-        'name','Global Horizontal Irradiance Average (Hourly)',...
+        'name','Comparison of Irradiance Ratios',...
         'Color','white');
     
     [n m] = size(irradiance_ratio);
@@ -342,7 +341,7 @@ if ismember(2,view) || ismember(1,output)
     disp('Finished plotting Figure 2...')
 end
 
-%% Fig 3 - Global Horizontal Irradiance Average (Hourly)
+%% Fig 3 - Effect of tilt angle on irradiance collection
 if ismember(3,view) || ismember(3,output)
     
     fig_3 = figure('Position',...                            	% draw figure
@@ -351,23 +350,11 @@ if ismember(3,view) || ismember(3,output)
         'numbertitle','on',...                                  % Give figure useful title
         'name','Effect of tilt angle on irradiance collection',...
         'Color','white');
-
-%     p2_1 = plot(allDates_H,GHI_CMP1_H,...                           
-%         'DisplayName','Measured GHI, Graaf-Reinet',...
-%         'Color',[0.729411764705882 0.831372549019608 0.956862745098039 0.6],...     % [R G B Alpha]
-%         'LineStyle','-',...
-%         'LineWidth',0.8,...
-%         'MarkerFaceColor',[0 0.447058826684952 0.74117648601532],...
-%         'MarkerEdgeColor',[0 0.447058826684952 0.74117648601532],...
-%         'MarkerSize',2,...
-%         'Marker','o');
-%     hold on
-
     
-    [n m] = size(Max_solar_power);
+    [n m] = size(Max_solar_energy);
     for i=1:m
         plot_num = strcat('p2_',num2str(i+1));
-        variable.(plot_num) = plot(DateDayIndex,Max_solar_power(:,i),...
+        variable.(plot_num) = plot(DateDayIndex,Max_solar_energy(:,i),...
         'DisplayName',TiltLabels{i},...
         'LineStyle','-',...
         'LineWidth',1.5);
@@ -420,7 +407,7 @@ if ismember(3,view) || ismember(3,output)
 end
 
 %% Output
-
+disp(' ')
 disp('-------------------------')
 disp(['Maximum air temperature: ',num2str(round(Max_air_temp,2)),'°C'])
 disp(['Minimum air temperature: ',num2str(round(Min_air_temp,2)),'°C'])
@@ -428,16 +415,19 @@ disp(['Maximum annual variation in air temperature: ',num2str(round(Temperature_
 disp(['Average annual air temperature: ',num2str(round(Average_air_temp,2)),'°C'])
 disp(' ')
 
+disp(['Annual measured solar irradiance total: ',...
+    num2str(round(Total_measured_annual_solar_energy/1000,2)),' kW/m^2'])
+disp(' ')
 [n m] = size(Energy_tilt_totals);
-disp('Total irradiance on tilted surface:')
+disp('Annual irradiance totals for tilted surfaces')
 for i=1:m
-    disp([TiltLabels{i},' at ',num2str(TiltAngles(i)),...
-        '° is ', num2str(Energy_tilt_totals(end,i)) , ' W/m^2' ])
+    disp(['   ',TiltLabels{i},' at ',num2str(TiltAngles(i)),...
+        '° is ', num2str(Energy_tilt_totals(end,i)/1000) , ' kW/m^2' ])
 end
 disp(' ')
 disp('-------------------------')
 
-
+% Images
 if ismember(1,view) || ismember(1,output)
     set(fig_1, 'Visible', 'on');
     WinOnTop( fig_1, true );

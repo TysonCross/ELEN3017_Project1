@@ -1,14 +1,14 @@
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
 view    = [1];
-output  = [1];
+output  = view;
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
 Longitude = 24.58582;
 Elevation = 660; % metres
 
-[Date_2014,~,GHI_CMP11_Jun_2014,DNI_Jun_CHP1_2014,DHI_Jun_CMP11_2014,Air_Jun_Temp_2014,...
+[Date_2014,~,GHI_CMP11_Jun_2014,DNI_Jun_CHP1_2014,DHI_Jun_CMP11_2014,Air_Temp_Jun_2014,...
     BP_Jun_2014,RH_Jun_2014,Rain_Jun_Tot_2014,WS_Jun_2014,WD_Jun_2014,WD_SD_Jun_2014] = importfile('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/21_June_2014.dat.txt',5, 1444);
 
 [Date_2015,~,GHI_CMP11_Jun_2015,DNI_CHP1_Jun_2015,DHI_CMP11_Jun_2015,Air_Temp_Jun_2015,...
@@ -20,21 +20,23 @@ Elevation = 660; % metres
 [Date_Dec_2015,~,GHI_CMP11_Dec_2015,DNI_CHP1_Dec_2015,DHI_CMP11_Dec_2015,Air_Temp_Dec_2015,...
     BP_Dec_2015,RH_Dec_2015,Rain_Tot_Dec_2015,WS_Dec_2015,WD_Dec_2015,WD_SD_Dec_2015] = importfile('/Users/Tyson/Documents/Academic/ELEN3017/Project/Data/21_December_2015.dat.txt',5, 1444);
 
-GHI_Max_Dec = max(max(GHI_CMP11_Dec_2014),max(GHI_CMP11_Dec_2015));
-GHI_Max_Jun = max(max(GHI_CMP11_Jun_2014),max(GHI_CMP11_Jun_2015));
+GHI_Max_Dec = max(max(GHI_CMP11_Dec_2014));
+GHI_Max_Jun = max(max(GHI_CMP11_Jun_2014));
+
+Air_Temp_Max_Dec = max(max(Air_Temp_Dec_2014));
+Air_Temp_Min_Dec = min(min(Air_Temp_Dec_2014));
+
+Air_Temp_Max_Jun = max(max(Air_Temp_Jun_2014));
+Air_Temp_Min_Jun = min(min(Air_Temp_Jun_2014));
+
+Air_Temp_range_Max_Delta = abs(Air_Temp_Max_Dec-Air_Temp_Max_Jun);
+Air_Temp_range_Absolute = abs(Air_Temp_Max_Dec-Air_Temp_Min_Jun);;
 
 Solar_range_Max_Delta = abs(GHI_Max_Dec-GHI_Max_Jun);
 Solar_range_Absolute = GHI_Max_Dec;
 
 Total_insolation_Dec = max(cumtrapz(GHI_CMP11_Dec_2014));
 Total_insolation_Jun = max(cumtrapz(GHI_CMP11_Jun_2014));
-
-disp(['Typical total daily solar insolation for winter solstice: ', num2str(round(Total_insolation_Jun)), ' W/m^2'])
-disp(['Typical total daily solar insolation for summer solstice: ', num2str(round(Total_insolation_Dec)), ' W/m^2'])
-disp(['Typical maximum solar insolation peak at 12:00 on 21 December: ', num2str(round(GHI_Max_Dec)), ' W/m^2'])
-disp(['Typical maximum solar insolation peak at 12:00 on 21 June: ', num2str(round(GHI_Max_Jun)), ' W/m^2'])
-disp(' ')
-
 
 %% Dates
 [~,commonDates_Jun,~] = intersect(datenum(Date_2014),datenum(Date_2015));
@@ -179,6 +181,45 @@ if ismember(1,view) || ismember(1,output)
 end
 
 %% Output
+disp(' ')
+disp('--------------------------------')
+disp(['Total daily solar insolation for winter solstice: ', num2str(round(Total_insolation_Jun/1000,2)), ' kW/m^2'])
+disp(['Total daily solar insolation for summer solstice: ', num2str(round(Total_insolation_Dec/1000,2)), ' kW/m^2'])
+disp(['Maximum solar insolation peak at 12:00 on 21 December: ', num2str(round(GHI_Max_Dec,2)), ' W/m^2'])
+disp(['Maximum solar insolation peak at 12:00 on 21 June: ', num2str(round(GHI_Max_Jun,2)), ' W/m^2'])
+disp('--------------------------------')
+disp(' ')
+
+% Write Variables to file
+outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_EnergyTemp.m';
+fid = fopen(outfile, 'wt');
+fprintf(fid, '%s\n','% Calculated in B_Daily_Summer_Winter.m');
+
+fprintf(fid, 'GHI_CMP11_Dec_2014 =  [');
+fprintf(fid, '%f,',GHI_CMP11_Dec_2014(1:end-1));
+fprintf(fid, '%f];\n',GHI_CMP11_Dec_2014(end));
+fprintf(fid, 'GHI_Max_Dec = %f;\n',GHI_Max_Dec);
+fprintf(fid, 'Air_Temp_Max_Dec = %f;\n',Air_Temp_Max_Dec);
+fprintf(fid, 'Air_Temp_Min_Dec = %f;\n',Air_Temp_Min_Dec);
+
+fprintf(fid, 'GHI_CMP11_Jun_2014 =  [');
+fprintf(fid, '%f,',GHI_CMP11_Jun_2014(1:end-1));
+fprintf(fid, '%f];\n',GHI_CMP11_Jun_2014(end));
+fprintf(fid, 'GHI_Max_Jun = %f;\n',GHI_Max_Jun);
+fprintf(fid, 'Air_Temp_Max_Jun = %f;\n',Air_Temp_Max_Jun);
+fprintf(fid, 'Air_Temp_Min_Jun = %f;\n',Air_Temp_Min_Jun);
+
+fprintf(fid, 'Air_Temp_range_Max_Delta = %f;\n',Air_Temp_range_Max_Delta);
+fprintf(fid, 'Air_Temp_range_Absolute = %f;\n',Air_Temp_range_Absolute);
+fprintf(fid, 'Total_insolation_Dec = %f;\n',Total_insolation_Dec);
+fprintf(fid, 'Total_insolation_Jun = %f;\n',Total_insolation_Jun);
+fprintf(fid, 'Solar_range_Max_Delta = %f;\n',Solar_range_Max_Delta);
+fprintf(fid, 'Solar_range_Absolute = %f;\n',Solar_range_Absolute);
+
+fclose(fid);
+disp(['Variables written to file: ' , outfile]) 
+
+% Images
 if ismember(1,view) || ismember(1,output)
     set(fig_grt, 'Visible', 'on');
     WinOnTop( fig_grt, true );
