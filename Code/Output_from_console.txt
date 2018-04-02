@@ -56,19 +56,19 @@ Current at MPP: 2.52
 Load at MPP: 14.87
  
 Average peak solar energy striking tilted surface: 3.18 kWhr/day
-Maximum theoretical harvested energy is 2.87 kWhr/day
-Accounting for occlusion, a realistic estimate of harvested energy is 2.3 kWhr/day
+Maximum theoretical harvested energy is 3.83 kWhr/day
+Accounting for occlusion, a realistic estimate of harvested energy is 3.06 kWhr/day
  
-With fixed resistance of 10, daily power is 2.01 kWhr/day
-Accounting for occlusion, fixed resistance daily power is 1.47 kWhr/day
+With fixed resistance of 10, daily power is 2.68 kWhr/day
+Accounting for occlusion, fixed resistance daily power is 1.96 kWhr/day
  
-With MTTP daily power is 2.67 kWhr/day
-Accounting for occlusion, MTTP daily power is 1.77 kWhr/day
+With MTTP daily power is 3.56 kWhr/day
+Accounting for occlusion, MTTP daily power is 2.36 kWhr/day
  
 Average peak solar energy striking tilted surface 1161.46 kWhr/year
-Maximum theoretical energy harvested is 1047.94 kWhr/year
-Accounting for occlusion, a realistic estimate of harvested energy is 838.36 kWhr/year
+Maximum theoretical energy harvested is 1397.26 kWhr/year
+Accounting for occlusion, a realistic estimate of harvested energy is 1117.81 kWhr/year
  
-With fixed resistance of 10, annual power is 733.12 kWhr/year
-With MTTP annual power is 973.41 kWhr/year
+With fixed resistance of 10, annual power is 977.49 kWhr/year
+With MTTP annual power is 1297.88 kWhr/year
 

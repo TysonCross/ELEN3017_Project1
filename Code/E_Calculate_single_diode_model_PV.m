@@ -2,8 +2,8 @@
 % From http://www.mdpi.com/1996-1073/9/5/326/pdf
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = []; % [1 2]
-output  = [];
+view    = [1 2]; % [1 2]
+output  = view;
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
@@ -71,7 +71,7 @@ V_oc_0 = 45.3;                                              % [V]
 I_sc_0 = 8.60;                                              % [A]
 eta = 0.155;                                                % 15.5 percent efficiency
 
-panel_number = 3;
+panel_number = 4;
 panel_area = (1.956*0.992);                                 % m^2
 panel_area_total = panel_number * panel_area;             	% m^2
 
