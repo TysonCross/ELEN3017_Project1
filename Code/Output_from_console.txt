@@ -28,33 +28,43 @@ Annual irradiance totals for tilted surface:
 
 E:
 Unoccluded summer noon:1139 W/m^2:
-MPP is: 295.27 W
+Air Temp is : 38.97°C
+MPP is: 294.53 W
 Voltage at MPP: 37.5
-Current at MPP: 7.87
-Load at MPP: 4.76
+Current at MPP: 7.85
+Load at MPP: 4.77
  
-Occluded summer noon:397 W/m^2:
-MPP is: 105.03 W
+Occluded summer noon:768 W/m^2:
+Air Temp is : 27.28°C
+MPP is: 200.61 W
 Voltage at MPP: 37.5
-Current at MPP: 2.8
-Load at MPP: 13.39
+Current at MPP: 5.35
+Load at MPP: 7.01
  
-Unoccluded winter noon:144 W/m^2:
-MPP is: 38.04 W
+Unoccluded winter noon:571 W/m^2:
+Air Temp is : 21.48°C
+MPP is: 149.95 W
 Voltage at MPP: 37.5
-Current at MPP: 1.01
-Load at MPP: 36.97
+Current at MPP: 4
+Load at MPP: 9.38
  
-Occluded winter noon:571 W/m^2:
-MPP is: 151.31 W
+Occluded winter noon:358 W/m^2:
+Air Temp is : 10.76°C
+MPP is: 94.57 W
 Voltage at MPP: 37.5
-Current at MPP: 4.03
-Load at MPP: 9.29
+Current at MPP: 2.52
+Load at MPP: 14.87
  
-Average solar energy striking tilted surface: 1.05 kW/day
-Average_solar_energy striking tilted surface 382.21 kW/year
-Maximal energy harvested is 344.86 kW/year
-Accounting for occlusion, the maximum harvested energy is 258.64 kW/year
+Average solar energy striking tilted surface: 1.05 kWhr/day
+Maximum harvested energy is 0.94 kWhr/day
+Accounting for occlusion, the maximum harvested energy is 0.71 kWhr/day
+With fixed resistance of 10, daily power is 3.48 kWhr/day
+With MTTP daily power is 4.44 kWhr/day
+Average solar energy striking tilted surface 382.21 kWhr/year
+Maximum energy harvested is 344.86 kWhr/year
+Accounting for occlusion, the maximum harvested energy is 258.64 kWhr/year
+With fixed resistance of 10, annual power is 1270.73 kWhr/day
+With MTTP annual power is 1270.73 kWhr/day
 
 -----------------------------------
 Misc:
