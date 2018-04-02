@@ -1,7 +1,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = [1 2 4 5]; % [1 2 3 4 5]
-output  = view;
+view    = []; % [1 2 4 5]
+output  = [];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -274,17 +274,7 @@ for i=1:12
     Tilt_angle_optimal_weighted = Tilt_angle_optimal_weighted + mult;
 end
 
-% output
-Tilt_angle_max = max(Tilt_angle_optimal);
-Tilt_angle_min = min(Tilt_angle_optimal);
-Tilt_angle_variation = abs(Tilt_angle_max-Tilt_angle_min);
-disp(['Maximum optimal tilt angle (Winter): ',num2str(round(Tilt_angle_max,2)),'°'])
-disp(['Mimimum optimal tilt angle (SUmmer): ',num2str(round(Tilt_angle_min,2)),'°'])
-disp(['Annual tilt variation: ',num2str(round(Tilt_angle_variation,2)),'°'])
-disp(['Optimal tilt angle (mean): ',num2str(round(Tilt_angle_optimal_mean,2)),'°'])
-disp(['Optimal tilt angle (weighted): ',num2str(round(Tilt_angle_optimal_weighted,2)),'°'])
-disp(' ')
-disp('---------------------')
+
 
 %% Clear temporary variables
 clearvars raw_sundata raw_azimuth raw_elevation raw_time raw_date R i j k str;
@@ -646,8 +636,28 @@ if ismember(5,view) || ismember(5,output)
 end
 
 %% Output
+% output
+Tilt_angle_max = max(Tilt_angle_optimal);
+Tilt_angle_min = min(Tilt_angle_optimal);
+Tilt_angle_variation = abs(Tilt_angle_max-Tilt_angle_min);
+disp(['Maximum optimal tilt angle (Winter): ',num2str(round(Tilt_angle_max,2)),'°'])
+disp(['Mimimum optimal tilt angle (SUmmer): ',num2str(round(Tilt_angle_min,2)),'°'])
+disp(['Annual tilt variation: ',num2str(round(Tilt_angle_variation,2)),'°'])
+disp(['Optimal tilt angle (mean): ',num2str(round(Tilt_angle_optimal_mean,2)),'°'])
+disp(['Optimal tilt angle (weighted): ',num2str(round(Tilt_angle_optimal_weighted,2)),'°'])
+disp(' ')
+disp('---------------------')
 
 % Write Variables to file
+outfile1 = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_AnnualGHI.m';
+fid1 = fopen(outfile1, 'wt');
+fprintf(fid1, '%s\n','% Calculated in A_Annual_SolarPath_angles.m');
+fprintf(fid1, 'GHI_CMP1 = [');
+fprintf(fid1, '%f,',GHI_CMP1(1:end-1));
+fprintf(fid1, '%f];\n',GHI_CMP1(end));
+fclose(fid1);
+disp(['Variables written to file: ',outfile1]) 
+
 outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_Angles.m';
 fid = fopen(outfile, 'wt');
 fprintf(fid, '%s\n','% Calculated in A_Annual_SolarPath_angles.m');

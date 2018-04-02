@@ -34,13 +34,16 @@ Average annual air temperature: 18.85°C
 Annual measured solar irradiance total: 2765.66 kW/m^2
  
 Annual irradiance totals for tilted surfaces
-   Tilt angle (weighted) at 28.9169° is 311.8565 kW/m^2
-   Tilt angle (mean) at 33.9488° is 311.4346 kW/m^2
-   Tilt angle (min) at 10.93° is 293.8693 kW/m^2
-   Tilt angle (max) at 56.49° is 280.5522 kW/m^2
-   No tilt (horizonal) at 0° is 268.6752 kW/m^2
+   Tilt angle (weighted) at 28.9169° is 1440.8838 kW/m^2
+   Tilt angle (mean) at 33.9488° is 1439.7569 kW/m^2
+   Tilt angle (min) at 10.93° is 1354.8807 kW/m^2
+   Tilt angle (max) at 56.49° is 1300.5881 kW/m^2
+   No tilt (horizonal) at 0° is 1236.8362 kW/m^2
 
 E:
+-------------------------
+MPP:
+ 
 Unoccluded summer noon:1139 W/m^2:
 Air Temp is : 38.97°C
 MPP is: 294.53 W
@@ -68,6 +71,37 @@ MPP is: 94.57 W
 Voltage at MPP: 37.5
 Current at MPP: 2.52
 Load at MPP: 14.87
+ 
+-------------------------
+Fixed Load:
+ 
+Unoccluded summer noon:1139 W/m^2:
+Air Temp is : 38.97°C
+Power is: 185.76 W
+Voltage (fixed): 43.1
+Current (fixed): 4.31
+Load at (fixed): 10
+ 
+Occluded summer noon:768 W/m^2:
+Air Temp is : 27.28°C
+Power is: 172.64 W
+Voltage (fixed): 41.55
+Current (fixed): 4.16
+Load at (fixed): 10
+ 
+Unoccluded winter noon:571 W/m^2:
+Air Temp is : 21.48°C
+Power is: 149 W
+Voltage (fixed): 38.6
+Current (fixed): 3.86
+Load at (fixed): 10
+ 
+Occluded winter noon:358 W/m^2:
+Air Temp is : 10.76°C
+Power is: 72.85 W
+Voltage (fixed): 26.99
+Current (fixed): 2.7
+Load at (fixed): 10
  
 -------------------------
 Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 0.8  kW/m^2/hour

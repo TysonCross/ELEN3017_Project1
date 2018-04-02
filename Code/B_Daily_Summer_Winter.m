@@ -244,6 +244,13 @@ outfile = '/Users/Tyson/Documents/Academic/ELEN3017/Project/code/variable_Energy
 fid = fopen(outfile, 'wt');
 fprintf(fid, '%s\n','% Calculated in B_Daily_Summer_Winter.m');
 
+fprintf(fid, 'Total_insolation_Jun = %f;\n',Total_insolation_Jun);
+fprintf(fid, 'Total_insolation_Dec = %f;\n',Total_insolation_Dec);
+fprintf(fid, 'Average_insolation = %f;\n',Average_insolation);
+fprintf(fid, 'GHI_Max_Jun = %f;\n',GHI_Max_Jun);
+fprintf(fid, 'GHI_Max_Dec = %f;\n',GHI_Max_Dec);
+fprintf(fid, 'Average_sun_hours = %f;\n',Average_sun_hours);
+
 fprintf(fid, 'GHI_CMP11_Dec_2014 =  [');
 fprintf(fid, '%f,',GHI_CMP11_Dec_2014(1:end-1));
 fprintf(fid, '%f];\n',GHI_CMP11_Dec_2014(end));

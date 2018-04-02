@@ -3,7 +3,7 @@
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
 view    = [2]; % [1 2]
-output  = [2];
+output  = [];
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
@@ -84,9 +84,11 @@ panel_area_total = panel_number * panel_area;             	% m^2
 
 % Site Data
 % T_a = 18.8;                                              	% [C] 
-G = [max_dec; mean_dec;max_jun; mean_jun];    	% W/m^2
-T_a = [max_dec_temp;mean_dec_temp;...
-    max_jun_temp;mean_jun_temp];                            % [C]
+g_mean = mean(max_dec+max_jun);
+t_mean = mean(max_dec_temp+max_jun_temp);
+
+G = g_mean;    	% W/m^2
+T_a = t_mean;                            % [C]
 G_pu = G./max(G);                                             % Normalised (Site data>1000)
 
 % Temperature coefficients
@@ -154,33 +156,16 @@ Energy_available_year_max = Average_tilted_solar_energy_year * panel_area_total 
 Energy_available_year_realistic = Energy_available_year_max * occlusion_factor;
 
 % Estimates from PV model simulations (unrelated to above estimates)
-% MPPT:
-R_MPPT = 10;                                               % [Ohm]
-I_MPPT = [4.31;4.155;3.86;2.699];                         	% Graphical intercepts
-    
-V_MPPT = I_MPPT.*R_MPPT;	
-P_MPPT = (I_MPPT.*V_MPPT)*panel_number ;                 % [W]
-Power_MPPT_hourly = (P_MPPT(1)+P_MPPT(3))/2;             % [Whr]
-Power_MPPT_power_daily = Power_MPPT_hourly*sun_hours;
-Power_MPPT_power_year = Power_MPPT_power_daily*365;
-Power_MPPT_hourly_occluded = (P_MPPT(2)+P_MPPT(4))/2;
-Power_MPPT_power_daily_occluded = Power_MPPT_hourly_occluded*sun_hours;
-Power_MPPT_power_year_occluded = Power_MPPT_power_daily_occluded*365;
-
-% OPTIMAL:
-R_OPTIMAL = Load(1);
-I_OPTIMAL = [7.852;5.729;4.288;2.704 ];
-V_OPTIMAL = I_OPTIMAL.*R_OPTIMAL;	
-P_OPTIMAL = (I_OPTIMAL.*V_OPTIMAL)*panel_number ;                 % [W]
-Power_OPTIMAL_hourly = (P_OPTIMAL(1)+P_OPTIMAL(3))/2;
-Power_OPTIMAL_power_daily = Power_OPTIMAL_hourly*sun_hours;
-Power_OPTIMAL_power_year = Power_OPTIMAL_power_daily*365;
-Power_OPTIMAL_hourly_occluded = (P_OPTIMAL(2)+P_OPTIMAL(4))/2;
-Power_OPTIMAL_power_daily_occluded = Power_OPTIMAL_hourly_occluded*sun_hours;
-Power_OPTIMAL_power_year_occluded = Power_OPTIMAL_power_daily_occluded*365;
-
-Power_difference = (abs(Power_OPTIMAL_hourly-Power_MPPT_hourly)/Power_OPTIMAL_hourly)*100;
-Power_difference_occluded = (abs(Power_OPTIMAL_hourly_occluded-Power_MPPT_hourly_occluded)/Power_OPTIMAL_hourly_occluded)*100;
+% MTTP:
+R_MTTP = Load;
+[n m] = size(R_MTTP)
+for i=1:n
+    V_MTTP(i,:) = R_MTTP(i).*I(:,mpp_index(i));
+end
+P_MTTP = MPP*panel_number;
+Power_MTTP_hourly = P_MTTP(1);
+Power_MTTP_power_daily = Power_MTTP_hourly*sun_hours;
+Power_MTTP_power_year = Power_MTTP_power_daily*365;
 
 disp('Calculations complete')
 
@@ -192,18 +177,11 @@ offset = [ scr(3)/4 scr(4)/4];
 fontName='Helvetica';
 set(0,'defaultAxesFontName', fontName);                     % Make fonts pretty
 set(0,'defaultTextFontName', fontName);
-set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % OPTIMAL with your system's monospaced font
+set(groot,'FixedWidthFontName', 'ElroNet Monospace')        % replace with your system's monospaced font
 
 % labels = {'Unoccluded summer noon','Occluded summer noon','Unoccluded winter noon','Occluded winter noon'};
-labels{1} = strcat('Unoccluded summer noon:', num2str(round(G(1))),' W/m^2');
-labels{2} = strcat('Occluded summer noon:', num2str(round(G(2))),' W/m^2');
-labels{3} = strcat('Unoccluded winter noon:', num2str(round(G(3))),' W/m^2');
-labels{4} = strcat('Occluded winter noon: ', num2str(round(G(4))),' W/m^2');
-
-label_temp{1} = num2str(round(max_dec_temp,2));
-label_temp{2} = num2str(round(mean_dec_temp,2));
-label_temp{3} = num2str(round(max_jun_temp,2));
-label_temp{4} = num2str(round(mean_jun_temp,2));
+labels{1} = strcat('Annual averaged noon:', num2str(round(G(1))),' W/m^2');
+label_temp{1} = num2str(round(T_a(1),2));
 
 for i=1:numel(mpp_index)
     mpplabelsIV{i} = strcat('MPP (', num2str(round(V(mpp_index(i)),2)),{','},num2str(round(I(i,mpp_index(i)),2)),')');
@@ -303,74 +281,58 @@ if ismember(2,view) || ismember(2,output)
     for i=1:n
         plot_num = strcat('p2_',num2str(i));
         variable.(plot_num) = plot(V,I(i,:),...
-            'DisplayName',labels{i},...
-            'Linestyle','-',... %linS{mod(i,numel(linS))+1}
-            'LineWidth',1.5);
+        'DisplayName',labels{i},...
+        'Linestyle','-',... %linS{mod(i,numel(linS))+1}
+        'LineWidth',1.5);
         hold on
          
-        MPPT_dot_num = strcat('MPPT_dot_',num2str(i));
-        variable.(MPPT_dot_num) = plot(V_MPPT(i),I_MPPT(i),'o');
-        set(variable.(MPPT_dot_num),...
-            'Color',[0.9 0.18 0.18 0.6],...
-            'MarkerSize',4,...
-            'MarkerFaceColor',[0.9 0.18 0.18]);
+        x_pos = V(mpp_index(i));
+        y_pos = I(i,double(mpp_index(i)));
         
-        OPTIMAL_dot_num = strcat('OPTIMAL_dot_',num2str(i));
-        variable.(OPTIMAL_dot_num) = plot(V_OPTIMAL(i),I_OPTIMAL(i),'o');
-        set(variable.(OPTIMAL_dot_num),...
-            'Color',[0.9 0.18 0.18 0.6],...
-            'MarkerSize',4,...
-            'MarkerFaceColor',[0.9 0.18 0.18]);
-    end
-    
-    x_pos = V(mpp_index(1));
-    y_pos = I(1,double(mpp_index(1)));
-        
-    MPP_1 = plot(x_pos,y_pos,'o');
-    set(MPP_1,...
+        ref_num = strcat('r2_',num2str(i));
+        variable.(ref_num) = plot(x_pos,y_pos,'o');
+        set(variable.(ref_num),...
         'DisplayName','',...
         'Color',[0.18 0.18 0.18],...
         'MarkerSize',6,...
         'MarkerFaceColor',[0.18 0.18 0.18],...
         'Linestyle','-',...
         'LineWidth',1.5);
-    hold on
-
-    offset_x = 1;
-    offset_y = 0;
+        hold on
+        
+        offset_x = -0.6;
+        offset_y = 0.26;
+        ann_num = strcat('a2_',num2str(i));
+        variable.(ann_num) = text(x_pos+offset_x,y_pos+offset_y,mpplabelsIV{i},...
+            'Color',[0.18 0.18 0.18],...
+            'FontSize',12,...
+            'FontName',fontName);
+    end
     
-    a2_1 = text(x_pos+offset_x,y_pos+offset_y,mpplabelsIV{1},...
-        'Color',[0.18 0.18 0.18],...
-        'FontSize',12,...
-        'FontName',fontName);
-
-    
-    r1_1 = refline(1/10,0);
+    r1_1 = refline(1/Load(1),0);
     set(r1_1,...
-        'DisplayName','Inverse slope MPPT resistance 10\Omega',...
-        'Color',[0.18 0.18 0.18],...
-        'Linestyle','-',...
-        'LineWidth',1);
-    
-    r1_2 = text(...
-        'FontSize',12,...
-        'Rotation',17.5,...
-        'String',{'Inverse slope of MPPT resistance 10\Omega'},...
-        'Position',[4.93878055987297 0.706242313802448 0],...
-        'Color',[0.18 0.18 0.18],...
-        'FontName',fontName);
-    
-    r2_1 = refline(1/Load(1),0);
-    set(r2_1,...
         'DisplayName','Inverse slope optimal resistance',...
         'Color',[0.18 0.18 0.18],...
         'Linestyle','-',...
         'LineWidth',1);
     
-    r2_2 = text(...
-        'FontSize',12,'Rotation',34,'String',{'Inverse slope of optimal resistance'},...
-        'Position',[1.57617957446196 0.56698501937274 0],...
-        'Color',[0.18 0.18 0.18]);
+    r1_3 = text(...
+        'FontSize',12,...
+        'Rotation',17.5,...
+        'String',{'Inverse slope of optimal resistance'},...
+        'Position',[4.93878055987297 0.706242313802448 0],...
+        'Color',[0.18 0.18 0.18],...
+        'FontName',fontName);
+    
+%     dot_1 = plot(27,2.699,'o');
+%     dot_2 = plot(38.6,3.86,'o');
+%     dot_3 = plot(41.55,4.155,'o');
+% 	dot_4 = plot(43.2,4.31,'o');
+%     
+%     set([dot_1 dot_2 dot_3 dot_4],...
+%         'Color',[0.9 0.18 0.18 0.6],...
+%         'MarkerSize',4,...
+%         'MarkerFaceColor',[0.9 0.18 0.18]);
     
     % Axis
     ax2 = gca;
@@ -396,27 +358,7 @@ if ismember(2,view) || ismember(2,output)
             'BackgroundColor','white',...
             'FontSize',12,...
             'FontName',fontName);
-    a2_1b = annotation('textbox',[0.0961796067500641 0.593400576495236 0.200289575289575 0.0432766615146831],...
-            'String',labels{2},...
-            'LineStyle','none',...
-            'FitBoxToText','on',...
-            'BackgroundColor','white',...
-            'FontSize',12,...
-            'FontName',fontName);
-    a2_1c = annotation('textbox',[0.0961796067500641 0.46352804383469 0.202702702702703 0.0432766615146831],...
-            'String',labels{3},...
-            'LineStyle','none',...
-            'FitBoxToText','on',...
-            'BackgroundColor','white',...
-            'FontSize',12,...
-            'FontName',fontName);
-    a2_1d = annotation('textbox',[0.0961796067500641 0.322822274785429 0.189671814671815 0.0432766615146831],...
-            'String',labels{4},...
-            'LineStyle','none',...
-            'FitBoxToText','on',...
-            'BackgroundColor','white',...
-            'FontSize',12,...
-            'FontName',fontName);
+
     
     % Adjust Figure 2
     pos_2 = get(ax2, 'Position');                             	% Current position
@@ -434,79 +376,64 @@ end
 disp(' ')
 disp('-------------------------')
 %     [MPP(i) mpp_index(i)] = max(P(i,:));
-disp('OPTIMAL Load:')
+disp('Optimal Load:')
 disp(' ')
 [n m]  = size(P);
 for i=1:n
 disp([labels{i},':'])
 disp(['Air Temp is : ',label_temp{i},'°C'])
-disp(['Power is: ',num2str(round(P_OPTIMAL(i)/panel_number,2)),' W'])
-disp(['Voltage (OPTIMAL): ',num2str(round(V_OPTIMAL(i)),2),' V'])
-disp(['Current (OPTIMAL): ',num2str(round(I_OPTIMAL(i),2)),' A'])
-disp(['Load (OPTIMAL): ',num2str(round(R_OPTIMAL,2)),' Ohm'])
+disp(['Load at MPP is: ',num2str(round(MPP(i),2)),' W'])
+disp(['Voltage at MPP: ',num2str(round(V(mpp_index(i)),2))])
+disp(['Current at MPP: ',num2str(round(I(i,mpp_index(i)),2))])
+disp(['Load at MPP: ',num2str(round(R(i,mpp_index(i)),2))])
 disp(' ')
 end
 
-disp('-------------------------')
-disp('MPPT Load:')
-disp(' ')
-[n m]  = size(P_MPPT);
-for i=1:n
-disp([labels{i},':'])
-disp(['Air Temp is : ',label_temp{i},'°C'])
-disp(['Power is: ',num2str(round(P_MPPT(i)/panel_number,2)),' W'])
-disp(['Voltage (MPPT): ',num2str(round(V_MPPT(i),2)),' V'])
-disp(['Current (MPPT): ',num2str(round(I_MPPT(i),2)),' A'])
-disp(['Load at (MPPT): ',num2str(round(R_MPPT),2),' Ohm'])
-disp(' ')
-end
 
 disp('-------------------------')
-disp(['Average peak solar energy striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
     num2str(round(Average_tilted_solar_energy_hour/1000,2)),'  kW/m^2/hour']); % Total Average striking surface
-disp(['Average peak solar energy striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
     num2str(round(Average_tilted_solar_energy_day/1000,2)),' kW/m^2/day']); % Total Average striking surface
-disp(['Average peak solar energy striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
     num2str(round(Average_tilted_solar_energy_year/1000,2)),' kW/m^2/year']); % Total Average striking surface
 disp(' ')
 disp('-------------------------')
-disp('Harvestable energy estimates for irradiance striking optimally-tilted solar panels:')
+disp('Harvestable ENERGY estimates for irradiance striking optimally-tilted solar panels:')
 disp(' ')
 disp('Per Day:')
 disp('--------')
-disp(['Maximum theoretical harvested energy is ',...
+disp(['Maximum theoretical harvested ENERGY is ',...
     num2str(round(Energy_available_day_max/1000,2)),' kWhr/day']); % Total captured on tilted panel
-disp(['With MPPT, daily harvested POWER is ',...
-    num2str(round(Power_MPPT_power_daily/1000,2)),' kWhr/day']); % 
-disp(['With OPTIMAL daily harvested POWER is ',...
-    num2str(round(Power_OPTIMAL_power_daily/1000,2)),' kWhr/day']); % 
+disp(['With MTTP daily harvested POWER is ',...
+    num2str(round(Power_MTTP_power_daily/1000,2)),' kWhr/day']); % 
 
 disp(' ')
-disp(['Accounting for occlusion, an estimate of available energy is ',...
+disp(['Accounting for occlusion, an estimate of available ENERGY is ',...
     num2str(round(Energy_available_day_realistic/1000,2)),' kWhr/day']); % Allowing for weather
-disp(['Accounting for occlusion, MPPT daily harvested POWER is ',...
-    num2str(round(Power_MPPT_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
-disp(['Accounting for occlusion, OPTIMAL daily harvested POWER is ',...
-    num2str(round(Power_OPTIMAL_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
+disp(['Accounting for occlusion, R=10 daily harvested POWER is ',...
+    num2str(round(Power_fixed_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
+disp(['Accounting for occlusion, MTTP daily harvested POWER is ',...
+    num2str(round(Power_MTTP_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
 disp(' ')
 disp('Per Year:')
 disp('--------')
-disp(['Average peak solar energy striking tilted surface ',...
+disp(['Average peak solar ENERGY striking tilted surface ',...
     num2str(round(Average_tilted_solar_energy_year/1000,2)),' kWhr/year']); % Total Average striking surface in a year
 disp(' ')
-disp(['Maximum theoretical energy harvestable is ',...
+disp(['Maximum theoretical ENERGY harvestable is ',...
     num2str(round(Energy_available_year_max/1000,2)),' kWhr/year']); % Total captured on tilted panel
-disp(['With MPPT, annual harvested annual POWER is ',...
-    num2str(round(Power_MPPT_power_year/1000,2)),' kWhr/year']); %
-disp(['With OPTIMAL annual harvested annual POWER is ',...
-    num2str(round(Power_OPTIMAL_power_year/1000,2)),' kWhr/year']); % 
+disp(['With R=10, annual harvested annual POWER is ',...
+    num2str(round(Power_fixed_power_year/1000,2)),' kWhr/year']); %
+disp(['With MTTP annual harvested annual POWER is ',...
+    num2str(round(Power_MTTP_power_year/1000,2)),' kWhr/year']); % 
 disp(' ')
-disp(['Accounting for occlusion, an estimate of harvestable energy is ',...
+disp(['Accounting for occlusion, an estimate of harvestable ENERGY is ',...
     num2str(round(Energy_available_year_realistic/1000,2)),' kWhr/year']); % Allowing for weather
-disp(['Accounting for occlusion, MPPT harvested annual POWER is ',...
-    num2str(round(Power_MPPT_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
-disp(['Accounting for occlusion, OPTIMAL annual harvested POWER is ',...
-    num2str(round(Power_OPTIMAL_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
+disp(['Accounting for occlusion, R=10 harvested annual POWER is ',...
+    num2str(round(Power_fixed_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
+disp(['Accounting for occlusion, MTTP annual harvested POWER is ',...
+    num2str(round(Power_MTTP_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
 disp('-------------------------')
 disp(' ')
 

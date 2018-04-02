@@ -160,19 +160,67 @@ max_height = max(GHI_CMP1_H);
 % end
 % clear j;
 
-variable_Angles; % Load calculated values
+variable_AnnualGHI;
+%{
+    The following variables are loaded:
+    GHI_CMP1
+%}
+
+variable_EnergyTemp; % load energy and temperature values for simulation
+%{
+    The following variables are loaded:
+
+	Total_insolation_Jun
+	Total_insolation_Dec
+	Average_insolation
+	GHI_Max_Jun
+	GHI_Max_Dec
+	Average_sun_hours
+
+    GHI_CMP11_Dec_2014
+    GHI_Max_Dec
+    Air_Temp_Max_Dec
+    Air_Temp_Min_Dec
+
+    GHI_CMP11_Jun_2014
+    GHI_Max_Jun
+    Air_Temp_Max_Jun
+    Air_Temp_Min_Jun
+
+    Air_Temp_range_Max_Delta
+    Air_Temp_range_Absolute
+    Total_insolation_Dec
+    Total_insolation_Jun
+    Solar_range_Max_Delta
+    Solar_range_Absolute
+%}
+
+variable_Angles; % load solar angles
+%{
+    Tilt_angle_optimal
+    Tilt_angle_max
+    Tilt_angle_min
+    Tilt_angle_optimal_mean
+    Tilt_angle_optimal_weighted
+    SunZenithAngleSimple
+    SunZenithAngle
+    DeclinationAngle
+%}
+
+%% Tilt Angles on irradiance
 
 TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_min,Tilt_angle_max,0.0];
 TiltLabels = {'Tilt angle (weighted)','Tilt angle (mean)',...
         'Tilt angle (min)','Tilt angle (max)','No tilt (horizonal)'};
-Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)));
+Daily_max_irradiance = (0.95*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)));
+Daily_max_irradiance = max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)));
 
 for i=1:numel(TiltAngles)
    irradiance_ratio(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))...
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
     b_angle(:,i) = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
     Max_solar_energy(:,i) = Daily_max_irradiance(:).* sin(b_angle(:,i));
-    Energy_tilt_totals(:,i) = cumtrapz(Max_solar_energy(:,i));
+    Energy_tilt_totals(:,i) = cumtrapz(Max_solar_energy(:,i)*4.33);
 end
 
 Total_measured_annual_solar_energy = max(sum(GHI_CMP1_H,'omitnan'));
