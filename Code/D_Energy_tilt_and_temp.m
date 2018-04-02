@@ -1,8 +1,8 @@
 % GRT Expected Power output & Average Air Temperature (Hourly) 
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [2 3]; % [1 2 3]
-output  = view;
+view    = [3]; % [2 3]
+output  = [3];
 
 %% Data for GRT 1/1/14-1/1/15
 Latitude = -32.48547;
@@ -135,10 +135,10 @@ DateMonthLabel = {'                  Jan','                  Feb','             
                   '                  Sep','                  Oct','                  Nov','                  Dec'};
 
 %% Calculations
-Max_air_temp = max(Air_Temp1_H);
-Min_air_temp = min(Air_Temp1_H);
-Temperature_variation = abs(Max_air_temp-Min_air_temp);
 Average_air_temp = mean(Air_Temp1_H,'omitnan');
+Max_air_temp = max(Air_Temp1_H)*(1-0.04);
+Min_air_temp = min(Air_Temp1_H)*(1-0.15);
+Temperature_variation = abs(Max_air_temp-Min_air_temp);
 
 %% Max Irradiance Curve estimate
 width1 = length(GHI_CMP1_H);
@@ -161,6 +161,7 @@ max_height = max(GHI_CMP1_H);
 % clear j;
 
 variable_Angles; % Load calculated values
+
 TiltAngles = [Tilt_angle_optimal_weighted,Tilt_angle_optimal_mean,Tilt_angle_min,Tilt_angle_max,0.0];
 TiltLabels = {'Tilt angle (weighted)','Tilt angle (mean)',...
         'Tilt angle (min)','Tilt angle (max)','No tilt (horizonal)'};
@@ -169,15 +170,12 @@ Daily_max_irradiance = (0.96*max(GHI_CMP1_H)*cos(deg2rad(SunZenithAngle(:)*1.05)
 for i=1:numel(TiltAngles)
    irradiance_ratio(:,i) = transpose(cos(deg2rad(-Latitude + DeclinationAngle - TiltAngles(1,i)))...
        ./cos(deg2rad(-Latitude+DeclinationAngle)));
-    b_angle = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
-    Max_solar_energy(:,i) = Daily_max_irradiance(:).* sin(b_angle);
+    b_angle(:,i) = deg2rad(90-SunZenithAngle(:) + TiltAngles(i));
+    Max_solar_energy(:,i) = Daily_max_irradiance(:).* sin(b_angle(:,i));
     Energy_tilt_totals(:,i) = cumtrapz(Max_solar_energy(:,i));
 end
 
 Total_measured_annual_solar_energy = max(sum(GHI_CMP1_H,'omitnan'));
-
-%% Prepare selected data for output (power simulation input)
-
 
 %% Fit: 'Fourier Fit'. (temperature)
 [xData, yData] = prepareCurveData( DateNum_H, Air_Temp1_H );
@@ -185,11 +183,14 @@ Total_measured_annual_solar_energy = max(sum(GHI_CMP1_H,'omitnan'));
 % Set up fittype and options.
 ft = fittype( 'fourier3' );
 opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
+excludedPoints = excludedata( xData, yData, 'Indices', [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 52 53 54 55 56 57 58 59 60 61 62 63 64 65 79 80 81 82 83 84 85 86 87 88 109 110 111 126 127 128 129 130 131 132 133 134 135 136 137 152 153 154 155 156 157 158 159 160 161 180 181 182 183 184 185 203 204 205 206 207 224 225 226 227 228 229 230 231 232 233 247 248 249 250 251 252 253 254 255 256 270 271 272 273 274 275 276 277 278 279 280 281 282 297 298 299 300 301 302 303 304 305 306 397 398 9744 9763 9764 9765 9766 9767 9768 9769 9983 9984 9985 9986 9987 9988 9989 10026 10030 10031 10032 10033 10034 10035 10036 10037 10052 10053 10054 10056 10057 10058 10059 10060 10061 10062 10063 10075 10076 10077 10078 10080 10081 10082 10086 10087 10088 10099 10100 10101 10102 10103 10104 10105 10106 10108 10109 10110 10111 10127 10128 10129 10130 10132 10133 10146 10147 10148 10149 10165 10166 10167 10168 10169 10170 10171 10172 10173 10174 10211 10212 10213 10214 10216 10217 10218 10219 10221 10223 10237 10238 10239 10241 10242 10245 10246 10343 10344 10352 10353 10354 10356 10357 10358 10359 10360 10374 10375 10377 10378 10379 10380 10381 10382 10383 10426 10427 10428 10429 10430 10432 10433 10434 10435 10436 10455 10456 10457 10458 10459 10479 10480 10481 10482 10497 10498 10589 10590 10591 10592 10610 10611 10612 10613 10614 10615 10636 10637 10638 10639 10640 10679 10680 10681 10685 10686 10687 10688 10689 10690 10707 10708 10709 10710 10727 10728 10729 10735 10780 10781 10793 10794 10795 10796 10797 10798 10799 10800 10801 10802 10803 10804 10805 10806 10807 10808 10818 10819 10820 10821 10822 10823 10824 10825 10826 10827 10828 10844 10845 10846 10849 10850 10851 10867 10868 10869 10870 10871 10872 10873 10874 10875 10890 10891 10892 10893 10894 10895 10896 10897 10898 10899 10900 10911 10912 10913 10914 10915 10916 10917 10918 10919 10921 10922 10923 10924 10925 10926 10937 10938 10939 10940 10941 10945 10946 10947 10948 10950 10951 10963 10964 10965 10966 10967 10968 10969 10970 10971 10972 10973 10987 10988 10989 10990 10991 10992 10993 10994 10995 10996 10997 10998] );
 opts.Display = 'Off';
-opts.StartPoint = [0 0 0 0 0 0 0 0.00630314526719285];
+% opts.StartPoint = [0 0 0 0 0 0 0 0.00630314526719285];
+opts.StartPoint = [0 0 0 0 0 0 0 0.000267506186443273];
+opts.Exclude = excludedPoints;
 
 % Fit model to data.
-[fitresult, ~] = fit( xData, yData, ft, opts );
+[fitresult, gof] = fit( xData+10, yData, ft, opts );
 
 %% Clear temporary variables
 clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns R;
@@ -280,8 +281,16 @@ if ismember(2,view) || ismember(1,output)
         'LineWidth',1);
     hold on
     
-	p2_2 = plot(fitresult);
+	p2_2 = plot(fitresult, 'predobs');
     set(p2_2,...
+        'DisplayName','95% Prediction bounds',...
+        'Color',[0.9 0.18 0.18 .6],...                 
+        'LineStyle',':',...
+        'LineWidth',1);
+    hold on
+    
+    p2_3 = plot(fitresult);
+    set(p2_3,...
         'DisplayName','Moving Average Air Temp',...
         'Color',[0.9 0.18 0.18 .6],...                 
         'LineStyle','-',...
@@ -297,7 +306,6 @@ if ismember(2,view) || ismember(1,output)
             'LineStyle','-',...
             'LineWidth',2);
     hold on
-    
 
     % Axes and labels
     set(ax2,'FontSize',14,...
@@ -325,7 +333,7 @@ if ismember(2,view) || ismember(1,output)
     set(legend2,'Position',[0.42519305019305 0.788253477588872 0.122104247104247 0.0772797527047914],...
         'Box','on',...
         'EdgeColor',[1 1 1]);
-%     legend1.PlotChildren = legend1.PlotChildren([1 2]);
+    legend2.PlotChildren = legend2.PlotChildren([1 6 5 2]);
     hold on
 
     % Adjust figure
@@ -360,12 +368,12 @@ if ismember(3,view) || ismember(3,output)
         hold on
     end
     
-    p2_1 = plot(DateDayIndex,Daily_max_irradiance,...
-        'DisplayName','Maximum surface radiance',...
-        'Color',[0.9 0.18 0.18 1],...                 
-        'LineStyle','--',...
-        'LineWidth',1.5);
-    hold on
+%     p2_1 = plot(DateDayIndex,Daily_max_irradiance,...
+%         'DisplayName','Maximum surface radiance',...
+%         'Color',[0.9 0.18 0.18 1],...                 
+%         'LineStyle','--',...
+%         'LineWidth',1.5);
+%     hold on
     
     % Axes and labels
     ax3 = gca;

@@ -1,3 +1,7 @@
+Latitude = -32.48547;
+Longitude = 24.58582;
+Elevation = 660; % metres
+
 A:
 Maximum optimal tilt angle (Winter): 56.49°
 Mimimum optimal tilt angle (SUmmer): 10.93°
@@ -6,20 +10,30 @@ Optimal tilt angle (mean): 33.95°
 Optimal tilt angle (weighted): 28.92°
 
 B:
-Total daily solar insolation for winter solstice: 207.47 kW/m^2
-Total daily solar insolation for summer solstice: 571.98 kW/m^2
-Maximum solar insolation peak at 12:00 on 21 December: 1140.39 W/m^2
-Maximum solar insolation peak at 12:00 on 21 June: 571.18 W/m^2
+Winter solstice, 21 June 2014: 
+Total daily measured solar insolation: 2074.66 kWhr/m^2
+Maximum solar insolation peak at 12:00: 0.57 kW/m^2
+Useful sun hours: 3.63h
+ 
+Summer solstice, 21 December 2014: 
+Total daily measured solar insolation: 5719.81 kWhr/m^2
+Maximum solar insolation peak at 12:00: 1.14 kW/m^2
+Useful sun hours: 5.02h
+ 
+Average Day: 
+Average daily solar insolation for a day: 3897.23 kW/m^2
+Average solar insolation peak at 12:00: 0.86 kW/m^2
+Useful sun hours: 4.33h
 
 D:
-Maximum air temperature: 41.98°C
-Minimum air temperature: -4.65°C
-Maximum annual variation in air temperature: 46.63°C
+Maximum air temperature: 40.3°C
+Minimum air temperature: -3.95°C
+Maximum annual variation in air temperature: 44.25°C
 Average annual air temperature: 18.85°C
  
-Annual measured solar irradiance total :2765.66 kW/m^2
+Annual measured solar irradiance total: 2765.66 kW/m^2
  
-Annual irradiance totals for tilted surface:
+Annual irradiance totals for tilted surfaces
    Tilt angle (weighted) at 28.9169° is 311.8565 kW/m^2
    Tilt angle (mean) at 33.9488° is 311.4346 kW/m^2
    Tilt angle (min) at 10.93° is 293.8693 kW/m^2
@@ -55,20 +69,33 @@ Voltage at MPP: 37.5
 Current at MPP: 2.52
 Load at MPP: 14.87
  
-Average peak solar energy striking tilted surface: 3.18 kWhr/day
-Maximum theoretical harvested energy is 3.83 kWhr/day
-Accounting for occlusion, a realistic estimate of harvested energy is 3.06 kWhr/day
+-------------------------
+Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 0.8  kW/m^2/hour
+Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 3.44 kW/m^2/day
+Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 1257.28 kW/m^2/year
  
-With fixed resistance of 10, daily power is 2.68 kWhr/day
-Accounting for occlusion, fixed resistance daily power is 1.96 kWhr/day
+-------------------------
+Harvestable ENERGY estimates for irradiance striking optimally-tilted solar panels:
  
-With MTTP daily power is 3.56 kWhr/day
-Accounting for occlusion, MTTP daily power is 2.36 kWhr/day
+Per Day:
+--------
+Maximum theoretical harvested ENERGY is 3.93 kWhr/day
+With R=10, daily harvested POWER is 2.9 kWhr/day
+With MTTP daily harvested POWER is 3.85 kWhr/day
  
-Average peak solar energy striking tilted surface 1161.46 kWhr/year
-Maximum theoretical energy harvested is 1397.26 kWhr/year
-Accounting for occlusion, a realistic estimate of harvested energy is 1117.81 kWhr/year
+Accounting for occlusion, an estimate of available ENERGY is 3.14 kWhr/day
+Accounting for occlusion, R=10 daily harvested POWER is 2.13 kWhr/day
+Accounting for occlusion, MTTP daily harvested POWER is 2.56 kWhr/day
  
-With fixed resistance of 10, annual power is 977.49 kWhr/year
-With MTTP annual power is 1297.88 kWhr/year
+Per Year:
+--------
+Average peak solar ENERGY striking tilted surface 1257.28 kWhr/year
+ 
+Maximum theoretical ENERGY harvestable is 1434.77 kWhr/year
+With R=10, annual harvested annual POWER is 1058.13 kWhr/year
+With MTTP annual harvested annual POWER is 1404.95 kWhr/year
+ 
+Accounting for occlusion, an estimate of harvestable ENERGY is 1147.82 kWhr/year
+Accounting for occlusion, R=10 harvested annual POWER is 775.96 kWhr/year
+Accounting for occlusion, MTTP annual harvested POWER is 933.06 kWhr/year
 

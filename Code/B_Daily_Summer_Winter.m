@@ -1,7 +1,7 @@
 clc; clear all; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children')); warning off;
 
-view    = [1]; %[1]
-output  = view;
+view    = []; %[1]
+output  = [];
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
@@ -22,6 +22,8 @@ Elevation = 660; % metres
 
 GHI_Max_Dec = max(max(GHI_CMP11_Dec_2014));
 GHI_Max_Jun = max(max(GHI_CMP11_Jun_2014));
+GHI_Max_Avg = (GHI_Max_Dec+GHI_Max_Jun)/2;
+
 
 Air_Temp_Max_Dec = max(max(Air_Temp_Dec_2014));
 Air_Temp_Min_Dec = min(min(Air_Temp_Dec_2014));
@@ -35,12 +37,13 @@ Air_Temp_range_Absolute = abs(Air_Temp_Max_Dec-Air_Temp_Min_Jun);;
 Solar_range_Max_Delta = abs(GHI_Max_Dec-GHI_Max_Jun);
 Solar_range_Absolute = GHI_Max_Dec;
 
-Total_insolation_Dec = sum(GHI_CMP11_Dec_2014)/100; % measured every 10 min
-Total_insolation_Jun = sum(GHI_CMP11_Jun_2014)/100; % measured every 10 min
-Average_insolation = (Total_insolation_Dec+Total_insolation_Jun)/2; 
+Total_insolation_Dec = sum(GHI_CMP11_Dec_2014)*10; % measured every 10 min
+Total_insolation_Jun = sum(GHI_CMP11_Jun_2014)*10; % measured every 10 min
+
+Average_insolation = (Total_insolation_Dec+Total_insolation_Jun)/2;
 sun_hours_Dec = Total_insolation_Dec/GHI_Max_Dec;
 sun_hours_Jun = Total_insolation_Jun/GHI_Max_Jun; 
-Average_sun_hours= (sun_hours_Dec+sun_hours_Jun)/2;
+Average_sun_hours = (sun_hours_Dec+sun_hours_Jun)/2;
 
 %% Dates
 [~,commonDates_Jun,~] = intersect(datenum(Date_2014),datenum(Date_2015));
@@ -219,11 +222,20 @@ end
 %% Output
 disp(' ')
 disp('--------------------------------')
-disp(['Total daily measured solar insolation for summer solstice (21 December): ', num2str(round(Total_insolation_Dec/1000,2)), ' kWhr/m^2'])
-disp(['Total daily measured solar insolation for winter solstice (21 June): ', num2str(round(Total_insolation_Jun/1000,2)), ' kWhr/m^2'])
+disp('Winter solstice, 21 June 2014: ');
+disp(['Total daily measured solar insolation: ', num2str(round(Total_insolation_Jun/1000,2)), ' kWhr/m^2'])
+disp(['Maximum solar insolation peak at 12:00: ', num2str(round(GHI_Max_Jun/1000,2)), ' kW/m^2'])
+disp(['Useful sun hours: ' num2str(round(sun_hours_Jun/1000,2)), 'h'])
+disp(' ')
+disp('Summer solstice, 21 December 2014: ');
+disp(['Total daily measured solar insolation: ', num2str(round(Total_insolation_Dec/1000,2)), ' kWhr/m^2'])
+disp(['Maximum solar insolation peak at 12:00: ', num2str(round(GHI_Max_Dec/1000,2)), ' kW/m^2'])
+disp(['Useful sun hours: ' num2str(round(sun_hours_Dec/1000,2)), 'h'])
+disp(' ')
+disp('Average Day: ');
 disp(['Average daily solar insolation for a day: ', num2str(round(Average_insolation/1000,2)), ' kW/m^2'])
-disp(['Maximum solar insolation peak at 12:00 on 21 December: ', num2str(round(GHI_Max_Dec/1000,2)), ' kW/m^2'])
-disp(['Maximum solar insolation peak at 12:00 on 21 June: ', num2str(round(GHI_Max_Jun/1000,2)), ' kW/m^2'])
+disp(['Average solar insolation peak at 12:00: ', num2str(round(GHI_Max_Avg/1000,2)), ' kW/m^2'])
+disp(['Useful sun hours: ' num2str(round(Average_sun_hours/1000,2)), 'h'])
 disp('--------------------------------')
 disp(' ')
 

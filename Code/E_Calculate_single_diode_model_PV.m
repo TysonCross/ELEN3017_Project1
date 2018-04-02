@@ -2,8 +2,8 @@
 % From http://www.mdpi.com/1996-1073/9/5/326/pdf
 clc; clear all; warning off; set(0,'ShowHiddenHandles','on'); delete(get(0,'Children'));
 
-view    = [1 2]; % [1 2]
-output  = view;
+view    = []; % [1 2]
+output  = [];
 
 %% Data for GRT 21st June/December (2014/2015)
 Latitude = -32.48547;
@@ -72,7 +72,7 @@ I_sc_0 = 8.60;                                              % [A]
 eta = 0.155;                                                % 15.5 percent efficiency
 
 panel_number = 4;
-panel_area = (1.956*0.992);                                 % m^2
+panel_area = (1.956*0.941);                                 % m^2
 panel_area_total = panel_number * panel_area;             	% m^2
 
 % Site Data
@@ -131,17 +131,22 @@ end
 %% Energy and power harvesting
 b_angle = deg2rad(90-SunZenithAngle([172 355]) + Tilt_angle_optimal_weighted); % Jun and Dex Zenith
 occlusion_factor = 0.8;
-sun_hours = 4;
-Max_solar_energy_Dec_hour = GHI_Max_Dec*sin(b_angle(2)); % W/m^2 at noon
-Max_solar_energy_Jun_hour = GHI_Max_Jun*sin(b_angle(1)); % W/m^2 at noon 
-Average_solar_energy_hour = (Max_solar_energy_Dec_hour+Max_solar_energy_Jun_hour)/2; % W/m^2/hour
-Average_solar_energy_day = Average_solar_energy_hour*sun_hours; % W/m^2/day
-Average_solar_energy_year = Average_solar_energy_day*365; % per year
-Energy_harvested_day_max = Average_solar_energy_day * panel_area_total * eta; % captured
-Energy_harvested_day_realistic = Energy_harvested_day_max * occlusion_factor;
-Energy_harvested_year_max = Average_solar_energy_year * panel_area_total * eta; % captured
-Energy_harvested_year_realistic = Energy_harvested_year_max * occlusion_factor;
+sun_hours = 4.33;
 
+% Tilt angle restricting availible energy striking surface
+Max_tilted_solar_energy_Dec_hour = GHI_Max_Dec*sin(b_angle(2)); % W/m^2 at noon
+Max_tilted_solar_energy_Jun_hour = GHI_Max_Jun*sin(b_angle(1)); % W/m^2 at noon 
+Average_tilted_solar_energy_hour = (Max_tilted_solar_energy_Dec_hour+Max_tilted_solar_energy_Jun_hour)/2; % W/m^2/hour
+Average_tilted_solar_energy_day = Average_tilted_solar_energy_hour*sun_hours; % W/m^2/day
+Average_tilted_solar_energy_year = Average_tilted_solar_energy_day*365; % per year
+
+% Estimates from efficiency and area
+Energy_available_day_max = Average_tilted_solar_energy_day * panel_area_total * eta; % captured
+Energy_available_day_realistic = Energy_available_day_max * occlusion_factor;
+Energy_available_year_max = Average_tilted_solar_energy_year * panel_area_total * eta; % captured
+Energy_available_year_realistic = Energy_available_year_max * occlusion_factor;
+
+% Estimates from PV model simulations (unrelated to above estimates)
 % Fixed:
 R_fixed = 10;                                               % [Ohm]
 I_fixed = [4.31;4.155;3.86;2.699];                         	% Graphical intercepts
@@ -418,35 +423,52 @@ disp(['Load at MPP: ',num2str(round(R(i,mpp_index(i)),2))])
 disp(' ')
 end
 
-disp(['Average peak solar energy striking tilted surface: ',...
-    num2str(round(Average_solar_energy_day/1000,2)),' kWhr/day']); % Total Average striking surface
-disp(['Maximum theoretical harvested energy is ',...
-    num2str(round(Energy_harvested_day_max/1000,2)),' kWhr/day']); % Total captured on tilted panel
-disp(['Accounting for occlusion, a realistic estimate of harvested energy is ',...
-    num2str(round(Energy_harvested_day_realistic/1000,2)),' kWhr/day']); % Allowing for weather
+disp('-------------------------')
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+    num2str(round(Average_tilted_solar_energy_hour/1000,2)),'  kW/m^2/hour']); % Total Average striking surface
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+    num2str(round(Average_tilted_solar_energy_day/1000,2)),' kW/m^2/day']); % Total Average striking surface
+disp(['Average peak solar ENERGY striking tilted surface of ', num2str(round(panel_area_total,2)), ' m^2 : ',...
+    num2str(round(Average_tilted_solar_energy_year/1000,2)),' kW/m^2/year']); % Total Average striking surface
 disp(' ')
-disp(['With fixed resistance of 10, daily power is ',...
+disp('-------------------------')
+disp('Harvestable ENERGY estimates for irradiance striking optimally-tilted solar panels:')
+disp(' ')
+disp('Per Day:')
+disp('--------')
+disp(['Maximum theoretical harvested ENERGY is ',...
+    num2str(round(Energy_available_day_max/1000,2)),' kWhr/day']); % Total captured on tilted panel
+disp(['With R=10, daily harvested POWER is ',...
     num2str(round(Power_fixed_power_daily/1000,2)),' kWhr/day']); % 
-disp(['Accounting for occlusion, fixed resistance daily power is ',...
-    num2str(round(Power_fixed_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
-disp(' ')
-disp(['With MTTP daily power is ',...
+disp(['With MTTP daily harvested POWER is ',...
     num2str(round(Power_MTTP_power_daily/1000,2)),' kWhr/day']); % 
-disp(['Accounting for occlusion, MTTP daily power is ',...
+
+disp(' ')
+disp(['Accounting for occlusion, an estimate of available ENERGY is ',...
+    num2str(round(Energy_available_day_realistic/1000,2)),' kWhr/day']); % Allowing for weather
+disp(['Accounting for occlusion, R=10 daily harvested POWER is ',...
+    num2str(round(Power_fixed_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
+disp(['Accounting for occlusion, MTTP daily harvested POWER is ',...
     num2str(round(Power_MTTP_power_daily_occluded/1000,2)),' kWhr/day']); % Allowing for weather
 disp(' ')
-disp(['Average peak solar energy striking tilted surface ',...
-    num2str(round(Average_solar_energy_year/1000,2)),' kWhr/year']); % Total Average striking surface in a year
-disp(['Maximum theoretical energy harvested is ',...
-    num2str(round(Energy_harvested_year_max/1000,2)),' kWhr/year']); % Total captured on tilted panel
-disp(['Accounting for occlusion, a realistic estimate of harvested energy is ',...
-    num2str(round(Energy_harvested_year_realistic/1000,2)),' kWhr/year']); % Allowing for weather
+disp('Per Year:')
+disp('--------')
+disp(['Average peak solar ENERGY striking tilted surface ',...
+    num2str(round(Average_tilted_solar_energy_year/1000,2)),' kWhr/year']); % Total Average striking surface in a year
 disp(' ')
-disp(['With fixed resistance of 10, annual power is ',...
-    num2str(round(Power_fixed_power_year/1000,2)),' kWhr/year']); % 
-disp(['With MTTP annual power is ',...
+disp(['Maximum theoretical ENERGY harvestable is ',...
+    num2str(round(Energy_available_year_max/1000,2)),' kWhr/year']); % Total captured on tilted panel
+disp(['With R=10, annual harvested annual POWER is ',...
+    num2str(round(Power_fixed_power_year/1000,2)),' kWhr/year']); %
+disp(['With MTTP annual harvested annual POWER is ',...
     num2str(round(Power_MTTP_power_year/1000,2)),' kWhr/year']); % 
-
+disp(' ')
+disp(['Accounting for occlusion, an estimate of harvestable ENERGY is ',...
+    num2str(round(Energy_available_year_realistic/1000,2)),' kWhr/year']); % Allowing for weather
+disp(['Accounting for occlusion, R=10 harvested annual POWER is ',...
+    num2str(round(Power_fixed_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
+disp(['Accounting for occlusion, MTTP annual harvested POWER is ',...
+    num2str(round(Power_MTTP_power_year_occluded/1000,2)),' kWhr/year']); % Allowing for weather
 disp('-------------------------')
 disp(' ')
 
