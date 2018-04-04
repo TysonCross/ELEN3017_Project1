@@ -42,94 +42,93 @@ Annual irradiance totals for tilted surfaces
 
 E:
 -------------------------
-MPP:
+OPTIMAL Load:
  
 Unoccluded summer noon:1139 W/m^2:
 Air Temp is : 38.97°C
-MPP is: 294.53 W
-Voltage at MPP: 37.5
-Current at MPP: 7.85
-Load at MPP: 4.77
+Power is: 294.37 W
+Voltage (OPTIMAL): 37 V
+Current (OPTIMAL): 7.85 A
+Load (OPTIMAL): 4.77 Ohm
  
 Occluded summer noon:768 W/m^2:
 Air Temp is : 27.28°C
-MPP is: 200.61 W
-Voltage at MPP: 37.5
-Current at MPP: 5.35
-Load at MPP: 7.01
+Power is: 156.71 W
+Voltage (OPTIMAL): 27 V
+Current (OPTIMAL): 5.73 A
+Load (OPTIMAL): 4.77 Ohm
  
 Unoccluded winter noon:571 W/m^2:
 Air Temp is : 21.48°C
-MPP is: 149.95 W
-Voltage at MPP: 37.5
-Current at MPP: 4
-Load at MPP: 9.38
+Power is: 87.79 W
+Voltage (OPTIMAL): 20 V
+Current (OPTIMAL): 4.29 A
+Load (OPTIMAL): 4.77 Ohm
  
 Occluded winter noon:358 W/m^2:
 Air Temp is : 10.76°C
-MPP is: 94.57 W
-Voltage at MPP: 37.5
-Current at MPP: 2.52
-Load at MPP: 14.87
+Power is: 34.91 W
+Voltage (OPTIMAL): 13 V
+Current (OPTIMAL): 2.7 A
+Load (OPTIMAL): 4.77 Ohm
  
 -------------------------
-Fixed Load:
+MPPT Load:
  
 Unoccluded summer noon:1139 W/m^2:
 Air Temp is : 38.97°C
-Power is: 185.76 W
-Voltage (fixed): 43.1
-Current (fixed): 4.31
-Load at (fixed): 10
+Power is: 167.18 W
+Voltage (MPPT): 43.1 V
+Current (MPPT): 4.31 A
+Load at (MPPT): 10 Ohm
  
 Occluded summer noon:768 W/m^2:
 Air Temp is : 27.28°C
-Power is: 172.64 W
-Voltage (fixed): 41.55
-Current (fixed): 4.16
-Load at (fixed): 10
+Power is: 155.38 W
+Voltage (MPPT): 41.55 V
+Current (MPPT): 4.16 A
+Load at (MPPT): 10 Ohm
  
 Unoccluded winter noon:571 W/m^2:
 Air Temp is : 21.48°C
-Power is: 149 W
-Voltage (fixed): 38.6
-Current (fixed): 3.86
-Load at (fixed): 10
+Power is: 134.1 W
+Voltage (MPPT): 38.6 V
+Current (MPPT): 3.86 A
+Load at (MPPT): 10 Ohm
  
 Occluded winter noon:358 W/m^2:
 Air Temp is : 10.76°C
-Power is: 72.85 W
-Voltage (fixed): 26.99
-Current (fixed): 2.7
-Load at (fixed): 10
+Power is: 65.56 W
+Voltage (MPPT): 26.99 V
+Current (MPPT): 2.7 A
+Load at (MPPT): 10 Ohm
  
 -------------------------
-Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 0.8  kW/m^2/hour
-Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 3.44 kW/m^2/day
-Average peak solar ENERGY striking tilted surface of 7.36 m^2 : 1257.28 kW/m^2/year
+Average peak solar energy striking tilted surface of 7.36 m^2 : 0.8  kW/m^2/hour
+Average peak solar energy striking tilted surface of 7.36 m^2 : 3.44 kW/m^2/day
+Average peak solar energy striking tilted surface of 7.36 m^2 : 1257.28 kW/m^2/year
  
 -------------------------
-Harvestable ENERGY estimates for irradiance striking optimally-tilted solar panels:
+Harvestable energy estimates for irradiance striking optimally-tilted solar panels:
  
 Per Day:
 --------
-Maximum theoretical harvested ENERGY is 3.93 kWhr/day
-With R=10, daily harvested POWER is 2.9 kWhr/day
-With MTTP daily harvested POWER is 3.85 kWhr/day
+Maximum theoretical harvested energy is 3.93 kWhr/day
+With MPPT, daily harvested POWER is 2.61 kWhr/day
+With OPTIMAL daily harvested POWER is 3.31 kWhr/day
  
-Accounting for occlusion, an estimate of available ENERGY is 3.14 kWhr/day
-Accounting for occlusion, R=10 daily harvested POWER is 2.13 kWhr/day
-Accounting for occlusion, MTTP daily harvested POWER is 2.56 kWhr/day
+Accounting for occlusion, an estimate of available energy is 3.14 kWhr/day
+Accounting for occlusion, MPPT daily harvested POWER is 1.91 kWhr/day
+Accounting for occlusion, OPTIMAL daily harvested POWER is 1.66 kWhr/day
  
 Per Year:
 --------
-Average peak solar ENERGY striking tilted surface 1257.28 kWhr/year
+Average peak solar energy striking tilted surface 1257.28 kWhr/year
  
-Maximum theoretical ENERGY harvestable is 1434.77 kWhr/year
-With R=10, annual harvested annual POWER is 1058.13 kWhr/year
-With MTTP annual harvested annual POWER is 1404.95 kWhr/year
+Maximum theoretical energy harvestable is 1434.77 kWhr/year
+With MPPT, annual harvested annual POWER is 952.32 kWhr/year
+With OPTIMAL annual harvested annual POWER is 1207.95 kWhr/year
  
-Accounting for occlusion, an estimate of harvestable ENERGY is 1147.82 kWhr/year
-Accounting for occlusion, R=10 harvested annual POWER is 775.96 kWhr/year
-Accounting for occlusion, MTTP annual harvested POWER is 933.06 kWhr/year
-
+Accounting for occlusion, an estimate of harvestable energy is 1147.82 kWhr/year
+Accounting for occlusion, MPPT harvested annual POWER is 698.36 kWhr/year
+Accounting for occlusion, OPTIMAL annual harvested POWER is 605.68 kWhr/year

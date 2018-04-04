@@ -155,11 +155,11 @@ Energy_available_year_realistic = Energy_available_year_max * occlusion_factor;
 
 % Estimates from PV model simulations (unrelated to above estimates)
 % MPPT:
+MPPT_efficiency = 0.9;
 R_MPPT = 10;                                               % [Ohm]
 I_MPPT = [4.31;4.155;3.86;2.699];                         	% Graphical intercepts
-    
 V_MPPT = I_MPPT.*R_MPPT;	
-P_MPPT = (I_MPPT.*V_MPPT)*panel_number ;                 % [W]
+P_MPPT = (I_MPPT.*V_MPPT)*panel_number * MPPT_efficiency;                 % [W]
 Power_MPPT_hourly = (P_MPPT(1)+P_MPPT(3))/2;             % [Whr]
 Power_MPPT_power_daily = Power_MPPT_hourly*sun_hours;
 Power_MPPT_power_year = Power_MPPT_power_daily*365;
